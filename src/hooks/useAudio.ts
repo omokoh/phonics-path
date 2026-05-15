@@ -44,17 +44,14 @@ function makeUtterance(text: string): SpeechSynthesisUtterance {
   return u;
 }
 
-// Card view: say the phoneme sound, then queue the example word.
+// Card view: say "{phoneme sound} {example word}" as one utterance — e.g. "rrr red", "vvv van".
 // Game view: say the phoneme sound only (no example — keeps the test fair).
 function speakPhoneme(displayText: string, example?: string): void {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const sound = phonemeToText[displayText] ?? displayText;
-  window.speechSynthesis.speak(makeUtterance(sound));
-  if (example) {
-    // Queued after the first utterance — browser inserts a natural pause
-    window.speechSynthesis.speak(makeUtterance(example));
-  }
+  const text = example ? `${sound} ${example}` : sound;
+  window.speechSynthesis.speak(makeUtterance(text));
 }
 
 export function useAudio() {
