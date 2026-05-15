@@ -6,37 +6,62 @@ import { useCallback, useRef } from "react";
 // 3. Name the file exactly as listed in phonemes.ts (e.g. "sh.mp3").
 // 4. Drop files into /public/audio/phonemes/
 // 5. Drop success chime into /public/audio/success.mp3
-// Real recordings will take priority; Web Speech API is the fallback only.
+// Real recordings take priority; Web Speech API fires only when an MP3 is missing.
 
+// Text passed to SpeechSynthesisUtterance for each phoneme.
+// Rules:
+//   - Elongate fricatives/nasals/liquids with repeated chars: "sss", "mmm", "fff"
+//   - Stops get a minimal schwa: "buh", "duh"
+//   - Digraphs use letter combos TTS engines voice as the blend, not as letters
+//   - Blends get a schwa to make them pronounceable: "bluh", "bruh"
 const phonemeToText: Record<string, string> = {
-  a: "ah",  e: "eh",  i: "ih",  o: "oh",  u: "uh",
-  b: "buh", c: "kuh", d: "duh", f: "fuh", g: "guh",
-  h: "huh", j: "juh", k: "kuh", l: "luh", m: "muh",
-  n: "nuh", p: "puh", qu: "kwuh", r: "ruh", s: "suh",
-  t: "tuh", v: "vuh", w: "wuh", x: "ks",  y: "yuh",
-  z: "zuh", sh: "sh", ch: "ch", th: "th", wh: "wh",
-  ph: "fuh", ck: "k", ng: "ng", bl: "bl", cl: "kl",
-  fl: "fl", pl: "pl", sl: "sl", br: "br", cr: "kr",
-  dr: "dr", fr: "fr", gr: "gr", pr: "pr", tr: "tr",
-  ai: "ay", ay: "ay", ea: "ee", ee: "ee", oa: "oh",
-  ow: "oh",
+  // Short vowels
+  a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
+  // Consonants — fricatives/nasals/liquids elongated
+  f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
+  s: "sss",  v: "vvv",  z: "zzz",  h: "hhh",
+  // Consonants — stops (minimal schwa)
+  b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
+  k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
+  x: "ks",   qu: "kwuh",
+  // Digraphs — spelled so TTS voices them as blends, not letter names
+  sh: "shh",  ch: "chh",  th: "thh",  wh: "wuh",
+  ph: "fff",  ck: "kuh",  ng: "nng",
+  // Consonant blends
+  bl: "bluh", cl: "kluh", fl: "fluh", pl: "pluh", sl: "sluh",
+  br: "bruh", cr: "kruh", dr: "druh", fr: "fruh", gr: "gruh",
+  pr: "pruh", tr: "truh",
+  // Vowel teams (long vowel sounds)
+  ai: "ayy",  ay: "ayy",  ea: "ee",   ee: "ee",
+  oa: "oh",   ow: "oh",
 };
 
-function speakPhoneme(displayText: string): void {
+function makeUtterance(text: string): SpeechSynthesisUtterance {
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.82;
+  u.pitch = 1.1;
+  u.volume = 1;
+  return u;
+}
+
+// Card view: say the phoneme sound, then queue the example word.
+// Game view: say the phoneme sound only (no example — keeps the test fair).
+function speakPhoneme(displayText: string, example?: string): void {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
-  const text = phonemeToText[displayText] ?? displayText;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.7;
-  utterance.pitch = 1.1;
-  utterance.volume = 1;
-  window.speechSynthesis.speak(utterance);
+  const sound = phonemeToText[displayText] ?? displayText;
+  window.speechSynthesis.speak(makeUtterance(sound));
+  if (example) {
+    // Queued after the first utterance — browser inserts a natural pause
+    window.speechSynthesis.speak(makeUtterance(example));
+  }
 }
 
 export function useAudio() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playPhoneme = useCallback((audioFile: string, display: string) => {
+  // Pass example only from the card view, not from the game.
+  const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -44,8 +69,7 @@ export function useAudio() {
     const audio = new Audio(`/audio/phonemes/${audioFile}`);
     audioRef.current = audio;
     audio.play().catch(() => {
-      // MP3 not found — fall back to Web Speech API
-      speakPhoneme(display);
+      speakPhoneme(display, example);
     });
   }, []);
 
@@ -54,9 +78,8 @@ export function useAudio() {
     audio.play().catch(() => {
       if (!("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance("Great job!");
+      const u = makeUtterance("Great job!");
       u.pitch = 1.4;
-      u.rate = 0.9;
       window.speechSynthesis.speak(u);
     });
   }, []);
