@@ -17,19 +17,27 @@ import { useCallback, useRef } from "react";
 const phonemeToText: Record<string, string> = {
   // Short vowels
   a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
-  // Consonants — fricatives/nasals/liquids elongated
+  // Fricatives / nasals / liquids — elongated so TTS sustains the sound
   f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
-  s: "sss",  v: "vvv",  z: "zzz",  h: "hhh",
-  // Consonants — stops (minimal schwa)
+  s: "sss",  v: "vvv",  z: "zzz",
+  // h: "huh" not "hhh" — TTS reads repeated h as letter names ("aitch aitch aitch")
+  h: "huh",
+  // Stops — minimal schwa to avoid silence
   b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
   k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
   x: "ks",   qu: "kwuh",
-  // Digraphs — spelled so TTS voices them as blends, not letter names
-  sh: "shh",  ch: "chh",  th: "thh",  wh: "wuh",
-  ph: "fff",  ck: "kuh",  ng: "nng",
-  // Consonant blends
-  bl: "bluh", cl: "kluh", fl: "fluh", pl: "pluh", sl: "sluh",
-  br: "bruh", cr: "kruh", dr: "druh", fr: "fruh", gr: "gruh",
+  // Digraphs
+  sh: "shh",
+  // ch: "chuh" not "chh" — TTS may produce /k/+/h/ from bare "chh"; adding vowel locks in /tʃ/
+  ch: "chuh",
+  // th: "thuh" not "thh" — "thh" is ambiguous; "thuh" reliably voices the blend
+  th: "thuh",
+  wh: "wuh",  ph: "fff",  ck: "kuh",  ng: "nng",
+  // Consonant blends — use the natural English spelling TTS already knows from common words.
+  // "cl" not "kl": TTS knows cl from "clap"; it has no rule for bare "kl".
+  // "cr" not "kr": TTS knows cr from "crab"; "kr" risks "kay-arr" letter-spelling.
+  bl: "bluh", cl: "cluh", fl: "fluh", pl: "pluh", sl: "sluh",
+  br: "bruh", cr: "cruh", dr: "druh", fr: "fruh", gr: "gruh",
   pr: "pruh", tr: "truh",
   // Vowel teams (long vowel sounds)
   ai: "ayy",  ay: "ayy",  ea: "ee",   ee: "ee",
