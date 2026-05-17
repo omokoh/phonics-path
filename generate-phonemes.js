@@ -39,7 +39,7 @@ if (!API_KEY) {
 //
 // Exceptions in phonemeSSML below:
 //   ng       — no plain-text form; IPA nasal-velar
-//   f, v, s, z, l — plain repeated chars read as letter names by Wavenet-F;
+//   f, v, s, z — plain repeated chars read as letter names by Wavenet-F;
 //               IPA length mark (ː) forces a sustained sound
 const phonemeText = {
   // ── Short vowels ─────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ const phonemeText = {
   // ng: IPA SSML (phonemeSSML below)
 
   // ── Liquids (sustained) ───────────────────────────────────────────────────
-  // l → IPA SSML (phonemeSSML below) — "lll" was read as "el el el"
+  l:  "llll",           // 4 chars — "lll" read as letter names; trying longer form
   r:  "rrr",
 
   // ── Fricatives ────────────────────────────────────────────────────────────
@@ -98,7 +98,6 @@ const phonemeText = {
 // Display text is a real word so if IPA fails the fallback is a word, not a letter name.
 const phonemeSSML = {
   ng: `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="ŋ">ring</phoneme></prosody></speak>`,
-  l:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="lː">leg</phoneme></prosody></speak>`,
   f:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="fː">fan</phoneme></prosody></speak>`,
   v:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="vː">van</phoneme></prosody></speak>`,
   s:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="sː">sun</phoneme></prosody></speak>`,
