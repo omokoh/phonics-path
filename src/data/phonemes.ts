@@ -15,10 +15,10 @@ export interface Phoneme {
 export const phonemes: Phoneme[] = [
   // ── Level 1: Core consonants + short vowels ────────────────────────────────
   { id: "m",  display: "m",  audioFile: "m.mp3",  example: "mug",      distractors: ["s", "t"],        level: 1 },
-  { id: "s",  display: "s",  audioFile: "s.mp3",  example: "sun",      distractors: ["m", "p"],        level: 1 },
+  { id: "s",  display: "s",  audioFile: "s.mp3",  example: "sit",      distractors: ["m", "p"],        level: 1 },
   { id: "a",  display: "a",  audioFile: "a.mp3",  example: "apple",    distractors: ["o", "i"],        level: 1 },
-  { id: "t",  display: "t",  audioFile: "t.mp3",  example: "top",      distractors: ["s", "n"],        level: 1 },
-  { id: "p",  display: "p",  audioFile: "p.mp3",  example: "pop",      distractors: ["b", "m"],        level: 1 },
+  { id: "t",  display: "t",  audioFile: "t.mp3",  example: "tuck",     distractors: ["s", "n"],        level: 1 },
+  { id: "p",  display: "p",  audioFile: "p.mp3",  example: "pick",     distractors: ["b", "m"],        level: 1 },
   { id: "i",  display: "i",  audioFile: "i.mp3",  example: "igloo",    distractors: ["a", "e"],        level: 1 },
   { id: "n",  display: "n",  audioFile: "n.mp3",  example: "nap",      distractors: ["m", "t"],        level: 1 },
   { id: "o",  display: "o",  audioFile: "o.mp3",  example: "octopus",  distractors: ["a", "u"],        level: 1 },
@@ -34,16 +34,16 @@ export const phonemes: Phoneme[] = [
   { id: "j",  display: "j",  audioFile: "j.mp3",  example: "jog",      distractors: ["g", "y"],        level: 2 },
   { id: "k",  display: "k",  audioFile: "k.mp3",  example: "kit",      distractors: ["c", "g"],        level: 2 },
   { id: "l",  display: "l",  audioFile: "l.mp3",  example: "lip",      distractors: ["r", "n"],        level: 2 },
-  { id: "r",  display: "r",  audioFile: "r.mp3",  example: "run",      distractors: ["l", "w"],        level: 2 },
-  { id: "u",  display: "u",  audioFile: "u.mp3",  example: "umbrella", distractors: ["a", "o"],        level: 2 },
+  { id: "r",  display: "r",  audioFile: "r.mp3",  example: "rid",      distractors: ["l", "w"],        level: 2 },
+  { id: "u",  display: "u",  audioFile: "u.mp3",  example: "up",       distractors: ["a", "o"],        level: 2 },
 
   // ── Level 3: Remaining consonants ─────────────────────────────────────────
   { id: "v",  display: "v",  audioFile: "v.mp3",  example: "van",      distractors: ["f", "b"],        level: 3 },
-  { id: "w",  display: "w",  audioFile: "w.mp3",  example: "wet",      distractors: ["r", "v"],        level: 3 },
-  { id: "x",  display: "x",  audioFile: "x.mp3",  example: "fox",      distractors: ["s", "z"],        level: 3 },
-  { id: "y",  display: "y",  audioFile: "y.mp3",  example: "yak",      distractors: ["j", "w"],        level: 3 },
+  { id: "w",  display: "w",  audioFile: "w.mp3",  example: "will",     distractors: ["r", "v"],        level: 3 },
+  { id: "x",  display: "x",  audioFile: "x.mp3",  example: "mix",      distractors: ["s", "z"],        level: 3 },
+  { id: "y",  display: "y",  audioFile: "y.mp3",  example: "yes",      distractors: ["j", "w"],        level: 3 },
   { id: "z",  display: "z",  audioFile: "z.mp3",  example: "zip",      distractors: ["s", "x"],        level: 3 },
-  { id: "qu", display: "qu", audioFile: "qu.mp3", example: "queen",    distractors: ["k", "w"],        level: 3 },
+  { id: "qu", display: "qu", audioFile: "qu.mp3", example: "quest",    distractors: ["k", "w"],        level: 3 },
 
   // ── Level 4: Consonant blends ──────────────────────────────────────────────
   { id: "bl", display: "bl", audioFile: "bl.mp3", example: "blue",     distractors: ["br", "fl"],      level: 4 },
@@ -63,11 +63,11 @@ export const phonemes: Phoneme[] = [
   { id: "sh",      display: "sh", audioFile: "sh.mp3",      example: "ship",  distractors: ["ch", "th"],      level: 5 },
   { id: "ch",      display: "ch", audioFile: "ch.mp3",      example: "chick", distractors: ["sh", "wh"],      level: 5 },
   { id: "th_soft", display: "th", audioFile: "th_soft.mp3", example: "thin",  distractors: ["f",  "sh"],      level: 5 },
-  { id: "th_hard", display: "th", audioFile: "th_hard.mp3", example: "this",  distractors: ["sh", "wh"],      level: 5 },
-  { id: "wh",      display: "wh", audioFile: "wh.mp3",      example: "when",  distractors: ["th_hard", "ch"], level: 5 },
-  { id: "ph",      display: "ph", audioFile: "ph.mp3",      example: "phone", distractors: ["f",  "wh"],      level: 5 },
+  { id: "th_hard", display: "th", audioFile: "th_hard.mp3", example: "the",   distractors: ["sh", "wh"],      level: 5 },
+  { id: "wh",      display: "wh", audioFile: "wh.mp3",      example: "whip",  distractors: ["th_hard", "ch"], level: 5 },
+  { id: "ph",      display: "ph", audioFile: "ph.mp3",      example: "fun",   distractors: ["f",  "wh"],      level: 5 },
   { id: "ck",      display: "ck", audioFile: "ck.mp3",      example: "cut",   distractors: ["k",  "ch"],      level: 5 },
-  { id: "ng",      display: "ng", audioFile: "ng.mp3",      example: "ring",  distractors: ["n",  "ng"],      level: 5 },
+  { id: "ng",      display: "ng", audioFile: "ng.mp3",      example: "ring",  distractors: ["n",  "m"],       level: 5 },
 
   // ── Level 6: Long vowels + vowel teams ────────────────────────────────────
   { id: "ai", display: "ai", audioFile: "ai.mp3", example: "cake",  distractors: ["ay", "ee"],      level: 6 },
