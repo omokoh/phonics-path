@@ -1,10 +1,10 @@
 import { useCallback, useRef } from "react";
 
 // HOW TO ADD / REPLACE RECORDINGS:
-// 1. Run: GOOGLE_TTS_API_KEY=<key> node generate-phonemes.js
-//    This regenerates all files in public/audio/phonemes/ and public/audio/words/
-// 2. Or drop hand-recorded MP3s directly into those folders (same filenames).
-// Real MP3s take priority; Web Speech API fires only when a file is missing.
+// Drop MP3s directly into public/audio/phonemes/ (same filenames).
+// The Read Naturally clips already contain phoneme sound + example word
+// in one clip — no separate word playback needed.
+// Run generate-phonemes.js only for blends not covered by Read Naturally.
 
 const phonemeToText: Record<string, string> = {
   a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
@@ -35,10 +35,7 @@ export const SUCCESS_PHRASES = [
   { file: "success_10.mp3", emoji: "👑", text: "Great work! You're amazing!" },
 ];
 
-// Indices that play for 3-in-a-row streak
 const STREAK_INDICES = [6, 7, 8];
-
-// Module-level so it persists across re-renders without being in hook state
 let lastSuccessIndex = -1;
 
 function pickPhrase(streak: number) {
@@ -57,51 +54,30 @@ function makeUtterance(text: string): SpeechSynthesisUtterance {
   return u;
 }
 
-function speakFallback(display: string, example?: string): void {
+function speakFallback(display: string): void {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const sound = phonemeToText[display] ?? display;
-  const text  = example ? `${sound} ${example}` : sound;
-  window.speechSynthesis.speak(makeUtterance(text));
-}
-
-function playWordAudio(id: string, example: string): void {
-  const audio = new Audio(`/audio/words/${id}.mp3`);
-  audio.play().catch(() => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(makeUtterance(example));
-    }
-  });
+  window.speechSynthesis.speak(makeUtterance(sound));
 }
 
 export function useAudio() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAll = useCallback(() => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
-  const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
+  // Read Naturally clips include phoneme + example word in one recording.
+  // Just play the file — no chained word audio needed.
+  const playPhoneme = useCallback((audioFile: string, display: string) => {
     clearAll();
-
-    const phonemeId = audioFile.replace(".mp3", "");
     const audio = new Audio(`/audio/phonemes/${audioFile}`);
     audioRef.current = audio;
-
-    if (example) {
-      audio.onended = () => {
-        timerRef.current = setTimeout(() => playWordAudio(phonemeId, example), 600);
-      };
-    }
-
-    audio.play().catch(() => speakFallback(display, example));
+    audio.play().catch(() => speakFallback(display));
   }, [clearAll]);
 
-  // Returns a Promise that resolves with the chosen emoji when audio finishes.
   const playSuccess = useCallback((streak: number = 0): Promise<string> => {
     const phrase = pickPhrase(streak);
     return new Promise((resolve) => {

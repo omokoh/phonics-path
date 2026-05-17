@@ -18,13 +18,13 @@ export function PhonicsCard({ phoneme, onNext }: Props) {
   useEffect(() => {
     if (!hasPlayed.current) {
       hasPlayed.current = true;
-      const t = setTimeout(() => playPhoneme(phoneme.audioFile, phoneme.display, phoneme.example), 300);
+      const t = setTimeout(() => playPhoneme(phoneme.audioFile, phoneme.display), 300);
       return () => clearTimeout(t);
     }
     return () => stop();
   }, [phoneme, playPhoneme, stop]);
 
-  const handleReplay = () => playPhoneme(phoneme.audioFile, phoneme.display, phoneme.example);
+  const handleReplay = () => playPhoneme(phoneme.audioFile, phoneme.display);
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 w-full max-w-lg mx-auto px-4">
