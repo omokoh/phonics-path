@@ -66,6 +66,10 @@ export function useAudio() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Pass example only from the card view, not from the game.
+  // When a real MP3 is available:
+  //   card → plays clean MP3 phoneme, then speaks the example word via TTS once it ends
+  //   game → plays clean MP3 phoneme only
+  // When no MP3 is found, falls back to TTS for the whole utterance.
   const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -73,7 +77,18 @@ export function useAudio() {
     }
     const audio = new Audio(`/audio/phonemes/${audioFile}`);
     audioRef.current = audio;
+
+    if (example) {
+      audio.onended = () => {
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(makeUtterance(example));
+        }
+      };
+    }
+
     audio.play().catch(() => {
+      // MP3 not found — fall back to TTS for everything
       speakPhoneme(display, example);
     });
   }, []);
