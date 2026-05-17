@@ -55,7 +55,7 @@ const phonemeText = {
   // ng: IPA SSML (phonemeSSML below)
 
   // ── Liquids (sustained) ───────────────────────────────────────────────────
-  l:  "llll",           // 4 chars — "lll" read as letter names; trying longer form
+  // l → SSML prosody (phonemeSSML below) — "lll"/"llll" read as letter names
   r:  "rrr",
 
   // ── Fricatives ────────────────────────────────────────────────────────────
@@ -98,6 +98,7 @@ const phonemeText = {
 // Display text is a real word so if IPA fails the fallback is a word, not a letter name.
 const phonemeSSML = {
   ng: `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="ŋ">ring</phoneme></prosody></speak>`,
+  l:  `<speak><prosody rate="x-slow" pitch="+2st">la</prosody></speak>`,
   f:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="fː">fan</phoneme></prosody></speak>`,
   v:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="vː">van</phoneme></prosody></speak>`,
   s:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="sː">sun</phoneme></prosody></speak>`,
