@@ -8,7 +8,7 @@ import { useCallback, useRef } from "react";
 
 const phonemeToText: Record<string, string> = {
   a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
-  f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
+  f: "fff",  l: "luh",  m: "mmm",  n: "nnn",  r: "rrr",
   s: "sss",  v: "vvv",  z: "zzz",  h: "huh",
   b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
   k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
