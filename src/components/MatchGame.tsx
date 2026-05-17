@@ -46,8 +46,7 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
     if (choice === phoneme.display) {
       setStates({ [choice]: "correct" });
       setLocked(true);
-      playSuccess();
-      setTimeout(onCorrect, 900);
+      playSuccess().then(() => setTimeout(onCorrect, 1500));
     } else {
       setStates((prev) => ({ ...prev, [choice]: "wrong" }));
       setTimeout(() => {

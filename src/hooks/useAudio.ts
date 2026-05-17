@@ -84,14 +84,20 @@ export function useAudio() {
     audio.play().catch(() => speakFallback(display, example));
   }, [clearAll]);
 
-  const playSuccess = useCallback(() => {
-    const audio = new Audio("/audio/success.mp3");
-    audio.play().catch(() => {
-      if (!("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const u = makeUtterance("Amazing! You did it!");
-      u.pitch = 1.4;
-      window.speechSynthesis.speak(u);
+  // Returns a Promise that resolves when the success audio finishes playing,
+  // so callers can chain a celebration pause before advancing.
+  const playSuccess = useCallback((): Promise<void> => {
+    return new Promise((resolve) => {
+      const audio = new Audio("/audio/success.mp3");
+      audio.onended = () => resolve();
+      audio.play().catch(() => {
+        if (!("speechSynthesis" in window)) { resolve(); return; }
+        window.speechSynthesis.cancel();
+        const u = makeUtterance("Amazing! You did it!");
+        u.pitch = 1.4;
+        u.onend = () => resolve();
+        window.speechSynthesis.speak(u);
+      });
     });
   }, []);
 
