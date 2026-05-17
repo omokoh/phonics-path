@@ -154,9 +154,12 @@ async function callTTS(input, speakingRate, pitch) {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function buildSSML(ipa, displayText) {
-  // Wrap in <prosody rate="slow"> so the phoneme has extra space to breathe
-  return `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="${ipa}">${displayText}</phoneme></prosody></speak>`;
+// Use the example word as SSML display text, NOT the phoneme id.
+// If Google TTS fails to apply the IPA and falls back to reading the display text,
+// "phone" is a safe fallback for ph — but "pee-aitch" (from display="ph") is not.
+function buildSSML(id, ipa) {
+  const display = phonemeWords[id] ?? id;
+  return `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="${ipa}">${display}</phoneme></prosody></speak>`;
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -168,18 +171,28 @@ async function main() {
   await mkdir(phonemesDir, { recursive: true });
   await mkdir(wordsDir,    { recursive: true });
 
-  const ids = Object.keys(phonemeIPA);
-  const total = ids.length * 2 + 1; // phoneme + word + success
+  // --only=ph,ck,ng,wh,th  regenerates a specific subset
+  const onlyArg = process.argv.find((a) => a.startsWith("--only="));
+  const onlySet = onlyArg ? new Set(onlyArg.replace("--only=", "").split(",")) : null;
+
+  const allIds = Object.keys(phonemeIPA);
+  const ids    = onlySet ? allIds.filter((id) => onlySet.has(id)) : allIds;
+
+  const total = ids.length * 2 + (onlySet ? 0 : 1); // success chime only on full run
   let done = 0;
   let failed = 0;
 
-  console.log(`\nGenerating ${ids.length} phoneme sounds + ${ids.length} example words + success chime…\n`);
+  if (onlySet) {
+    console.log(`\nRegenerating ${ids.length} phoneme sound(s): ${ids.join(", ")}\n`);
+  } else {
+    console.log(`\nGenerating ${ids.length} phoneme sounds + ${ids.length} example words + success chime…\n`);
+  }
 
   // ── Pass 1: phoneme sounds (SSML IPA) ──────────────────────────────────────
   console.log("── Pass 1: phoneme sounds (SSML IPA) ──");
   for (const id of ids) {
     const ipa  = phonemeIPA[id];
-    const ssml = buildSSML(ipa, id);
+    const ssml = buildSSML(id, ipa);
     const num  = String(++done + failed).padStart(2);
     process.stdout.write(`  [${num}/${total}] ${id.padEnd(4)}  ph="${ipa.padEnd(5)}"  … `);
     try {
@@ -193,7 +206,8 @@ async function main() {
     await delay(200);
   }
 
-  // ── Pass 2: example words (natural voice) ──────────────────────────────────
+  // ── Pass 2: example words (natural voice — skipped on --only runs) ──────────
+  if (!onlySet) {
   console.log("\n── Pass 2: example words (natural voice) ──");
   for (const id of ids) {
     const word = phonemeWords[id];
@@ -210,8 +224,15 @@ async function main() {
     }
     await delay(200);
   }
+  } // end if (!onlySet)
 
-  // ── Success chime ──────────────────────────────────────────────────────────
+  // ── Success chime (full run only) ─────────────────────────────────────────
+  if (onlySet) {
+    console.log(`\n─────────────────────────────────────────`);
+    console.log(`  Done — ${ids.length - failed} regenerated, ${failed} failed`);
+    console.log(`  Phonemes → public/audio/phonemes/\n`);
+    return;
+  }
   console.log("\n── Success chime ──");
   process.stdout.write(`  "Amazing! You did it!"  … `);
   try {

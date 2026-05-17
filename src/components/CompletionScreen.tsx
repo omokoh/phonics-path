@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 interface Props {
   onPlayAgain: () => void;
+  label?: string;
 }
 
 const STAR_COUNT = 18;
@@ -17,7 +18,6 @@ interface Star {
   duration: string;
   size: string;
   color: string;
-  rotate: string;
 }
 
 function generateStars(): Star[] {
@@ -29,11 +29,10 @@ function generateStars(): Star[] {
     duration: `${randomBetween(1.8, 3)}s`,
     size: `${randomBetween(18, 36)}px`,
     color: colors[Math.floor(Math.random() * colors.length)],
-    rotate: `${randomBetween(-180, 180)}deg`,
   }));
 }
 
-export function CompletionScreen({ onPlayAgain }: Props) {
+export function CompletionScreen({ onPlayAgain, label = "Keep Going!" }: Props) {
   const starsRef = useRef<Star[]>(generateStars());
 
   useEffect(() => {
@@ -45,7 +44,6 @@ export function CompletionScreen({ onPlayAgain }: Props) {
       className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
       style={{ backgroundColor: "#0f172a" }}
     >
-      {/* Confetti stars */}
       {starsRef.current.map((star) => (
         <div
           key={star.id}
@@ -64,27 +62,19 @@ export function CompletionScreen({ onPlayAgain }: Props) {
         />
       ))}
 
-      {/* Centre content */}
       <div className="flex flex-col items-center justify-center gap-8 z-10 px-6">
-        {/* Big celebration emoji */}
         <div className="celebration-bounce" style={{ fontSize: "clamp(80px, 18vw, 128px)" }}>
           🌟
         </div>
 
-        {/* Stars row */}
         <div className="flex gap-3" style={{ fontSize: "clamp(36px, 8vw, 56px)" }}>
           {"⭐⭐⭐".split("").map((star, i) => (
-            <span
-              key={i}
-              className="star-pop"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            >
+            <span key={i} className="star-pop" style={{ animationDelay: `${i * 0.2}s` }}>
               {star}
             </span>
           ))}
         </div>
 
-        {/* Play Again button — large, icon-led */}
         <button
           onClick={onPlayAgain}
           className="flex items-center justify-center gap-4 rounded-3xl select-none active:scale-95 transition-transform duration-150"
@@ -99,10 +89,10 @@ export function CompletionScreen({ onPlayAgain }: Props) {
             boxShadow: "0 8px 32px rgba(245,158,11,0.5)",
             marginTop: "16px",
           }}
-          aria-label="Play again"
+          aria-label={label}
         >
           <span style={{ fontSize: "1.2em" }}>▶</span>
-          <span>Play Again</span>
+          <span>{label}</span>
         </button>
       </div>
     </div>
