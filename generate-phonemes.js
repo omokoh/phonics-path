@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 // generate-phonemes.js
 //
-// Generates MP3 audio files for every phoneme using Google Cloud TTS.
-// The @google-cloud/text-to-speech package authenticates via service accounts;
-// for API-key auth we call the REST endpoint directly using Node's native fetch.
+// Generates two sets of MP3 files using Google Cloud TTS (en-US-Wavenet-F):
+//
+//   public/audio/phonemes/<id>.mp3  — pure phoneme sound via SSML IPA tags
+//   public/audio/words/<id>.mp3     — example word in natural voice
+//   public/audio/success.mp3        — celebration chime
+//
+// The app plays:  [phoneme MP3]  →  600 ms pause  →  [word MP3]
+// This gives the child a clear "mmmm" [pause] "map" experience.
 //
 // Usage:
 //   GOOGLE_TTS_API_KEY=<your_key> node generate-phonemes.js
 //
-// Output:
-//   public/audio/phonemes/<id>.mp3   — one file per phoneme
-//   public/audio/success.mp3         — celebration chime
-//
-// After running, drop these files into git. The app will prefer MP3s over
-// the Web Speech API fallback automatically (no code change needed).
+// Re-run any time to refresh files. Existing files are overwritten.
 
 import { writeFile, mkdir } from "fs/promises";
 import { join, dirname } from "path";
@@ -21,7 +21,6 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ── Validate API key ────────────────────────────────────────────────────────
 const API_KEY = process.env.GOOGLE_TTS_API_KEY;
 if (!API_KEY) {
   console.error("Error: GOOGLE_TTS_API_KEY environment variable is not set.");
@@ -29,38 +28,114 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-// ── Phoneme → TTS text map (mirrors src/hooks/useAudio.ts exactly) ──────────
-const phonemeToText = {
-  // Short vowels
-  a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
-  // Fricatives / nasals / liquids — elongated
-  f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
-  s: "sss",  v: "vvv",  z: "zzz",  h: "huh",
-  // Stops — minimal schwa
-  b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
-  k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
-  x: "ks",   qu: "kwuh",
-  // Digraphs
-  sh: "shh",  ch: "chuh",  th: "thuh",  wh: "wuh",
-  ph: "fff",  ck: "kuh",   ng: "nng",
-  // Consonant blends
-  bl: "bluh", cl: "cluh", fl: "fluh", pl: "pluh", sl: "sluh",
-  br: "bruh", cr: "cruh", dr: "druh", fr: "fruh", gr: "gruh",
-  pr: "pruh", tr: "truh",
-  // Vowel teams
-  ai: "ayy",  ay: "ayy",  ea: "ee",   ee: "ee",
-  oa: "oh",   ow: "oh",
+// ── IPA phoneme map ───────────────────────────────────────────────────────────
+// Each entry is the IPA symbol(s) passed to the SSML <phoneme> tag.
+// Strategy:
+//   Sustained sounds (nasals, liquids, fricatives): IPA + length mark ː
+//   Stops & affricates (can't be held without a vowel): IPA + minimal schwa ə
+//   Vowels: pure vowel IPA
+//   Blends: IPA combination + schwa
+const phonemeIPA = {
+  // Short vowels — pure vowel IPA
+  a:  "æ",          // cat
+  e:  "ɛ",          // bed
+  i:  "ɪ",          // bit
+  o:  "ɑ",          // hot (American English /ɑ/)
+  u:  "ʌ",          // cup
+
+  // Nasals — sustained with length mark
+  m:  "mː",
+  n:  "nː",
+  ng: "ŋː",
+
+  // Liquids — sustained
+  l:  "lː",
+  r:  "ɹː",         // American English r
+
+  // Fricatives — sustained
+  f:  "fː",
+  s:  "sː",
+  v:  "vː",
+  z:  "zː",
+  h:  "hː",
+  sh: "ʃː",
+  th: "ðː",         // voiced th (this, that) — matches example word "this"
+  ph: "fː",         // same sound as f
+
+  // Stops — schwa suffix makes the burst audible
+  b:  "bə",
+  c:  "kə",
+  d:  "də",
+  g:  "gə",
+  j:  "dʒə",
+  k:  "kə",
+  p:  "pə",
+  t:  "tə",
+  w:  "wə",
+  y:  "jə",
+  x:  "ksə",        // /ks/ sound as in fox
+  qu: "kwə",
+  ch: "tʃə",        // affricate — schwa needed
+  wh: "wə",         // same as w in American English
+  ck: "kə",         // same as k
+
+  // Consonant blends — schwa to complete the cluster
+  bl: "blə",
+  cl: "klə",
+  fl: "flə",
+  pl: "plə",
+  sl: "slə",
+  br: "bɹə",
+  cr: "kɹə",
+  dr: "dɹə",
+  fr: "fɹə",
+  gr: "gɹə",
+  pr: "pɹə",
+  tr: "tɹə",
+
+  // Vowel teams — long vowel IPA
+  ai: "eɪ",
+  ay: "eɪ",
+  ea: "iː",
+  ee: "iː",
+  oa: "oʊ",
+  ow: "oʊ",
 };
 
-// ── TTS REST API call ────────────────────────────────────────────────────────
-async function synthesize(text, speakingRate = 0.82, pitch = 2.0) {
+// Example words from src/data/phonemes.ts (must stay in sync)
+const phonemeWords = {
+  m: "map",   s: "sun",  a: "ant",   t: "top",   p: "pet",
+  i: "ink",   n: "net",  o: "ox",    b: "bat",   c: "cat",
+  d: "dog",   e: "egg",  f: "fan",   g: "gap",   h: "hat",
+  j: "jam",   k: "kit",  l: "leg",   r: "red",   u: "up",
+  v: "van",   w: "wet",  x: "fox",   y: "yak",   z: "zip",
+  qu: "queen",
+  bl: "blue",  cl: "clap", fl: "flag", pl: "play", sl: "sled",
+  br: "brag",  cr: "crab", dr: "drum", fr: "frog", gr: "grip",
+  pr: "pram",  tr: "trip",
+  sh: "ship",  ch: "chip", th: "this", wh: "when", ph: "phone",
+  ck: "duck",  ng: "ring",
+  ai: "rain",  ay: "day",  ea: "eat",  ee: "feet", oa: "boat",
+  ow: "snow",
+};
+
+// ── Google TTS REST API ───────────────────────────────────────────────────────
+async function synthesizeSSML(ssml, speakingRate = 0.72, pitch = 2.0) {
+  return callTTS({ ssml }, speakingRate, pitch);
+}
+
+async function synthesizeText(text, speakingRate = 0.88, pitch = 1.5) {
+  return callTTS({ text }, speakingRate, pitch);
+}
+
+async function callTTS(input, speakingRate, pitch) {
   const res = await fetch(
     `https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        input: { text },
+        input,
         voice: { languageCode: "en-US", name: "en-US-Wavenet-F" },
         audioConfig: { audioEncoding: "MP3", speakingRate, pitch },
       }),
@@ -79,49 +154,80 @@ async function synthesize(text, speakingRate = 0.82, pitch = 2.0) {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function buildSSML(ipa, displayText) {
+  // Wrap in <prosody rate="slow"> so the phoneme has extra space to breathe
+  return `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="${ipa}">${displayText}</phoneme></prosody></speak>`;
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   const phonemesDir = join(__dirname, "public/audio/phonemes");
+  const wordsDir    = join(__dirname, "public/audio/words");
   const audioDir    = join(__dirname, "public/audio");
 
   await mkdir(phonemesDir, { recursive: true });
+  await mkdir(wordsDir,    { recursive: true });
 
-  const entries = Object.entries(phonemeToText);
-  console.log(`\nGenerating ${entries.length} phoneme files…\n`);
+  const ids = Object.keys(phonemeIPA);
+  const total = ids.length * 2 + 1; // phoneme + word + success
+  let done = 0;
+  let failed = 0;
 
-  let ok = 0;
-  let fail = 0;
+  console.log(`\nGenerating ${ids.length} phoneme sounds + ${ids.length} example words + success chime…\n`);
 
-  for (const [id, text] of entries) {
-    process.stdout.write(`  [${String(ok + fail + 1).padStart(2)}/${entries.length}] ${id.padEnd(4)} (${text.padEnd(6)}) … `);
+  // ── Pass 1: phoneme sounds (SSML IPA) ──────────────────────────────────────
+  console.log("── Pass 1: phoneme sounds (SSML IPA) ──");
+  for (const id of ids) {
+    const ipa  = phonemeIPA[id];
+    const ssml = buildSSML(ipa, id);
+    const num  = String(++done + failed).padStart(2);
+    process.stdout.write(`  [${num}/${total}] ${id.padEnd(4)}  ph="${ipa.padEnd(5)}"  … `);
     try {
-      const buf = await synthesize(text);
+      const buf = await synthesizeSSML(ssml);
       await writeFile(join(phonemesDir, `${id}.mp3`), buf);
       console.log("✓");
-      ok++;
     } catch (err) {
       console.log(`✗  ${err.message}`);
-      fail++;
+      failed++;
     }
     await delay(200);
   }
 
-  // Success chime — upbeat pitch and slightly faster
-  process.stdout.write(`\n  success chime … `);
-  try {
-    const buf = await synthesize("Amazing! You did it!", 0.9, 4.0);
-    await writeFile(join(audioDir, "success.mp3"), buf);
-    console.log("✓");
-    ok++;
-  } catch (err) {
-    console.log(`✗  ${err.message}`);
-    fail++;
+  // ── Pass 2: example words (natural voice) ──────────────────────────────────
+  console.log("\n── Pass 2: example words (natural voice) ──");
+  for (const id of ids) {
+    const word = phonemeWords[id];
+    if (!word) { console.log(`  skipping ${id} — no word defined`); continue; }
+    const num = String(++done + failed).padStart(2);
+    process.stdout.write(`  [${num}/${total}] ${id.padEnd(4)}  "${word.padEnd(6)}"  … `);
+    try {
+      const buf = await synthesizeText(word);
+      await writeFile(join(wordsDir, `${id}.mp3`), buf);
+      console.log("✓");
+    } catch (err) {
+      console.log(`✗  ${err.message}`);
+      failed++;
+    }
+    await delay(200);
   }
 
-  console.log(`\n─────────────────────────────`);
-  console.log(`  Done: ${ok} generated, ${fail} failed`);
-  if (fail > 0) console.log("  Re-run the script to retry failed files.");
-  console.log(`  Output: public/audio/\n`);
+  // ── Success chime ──────────────────────────────────────────────────────────
+  console.log("\n── Success chime ──");
+  process.stdout.write(`  "Amazing! You did it!"  … `);
+  try {
+    const buf = await synthesizeText("Amazing! You did it!", 0.9, 4.0);
+    await writeFile(join(audioDir, "success.mp3"), buf);
+    console.log("✓");
+  } catch (err) {
+    console.log(`✗  ${err.message}`);
+    failed++;
+  }
+
+  console.log(`\n─────────────────────────────────────────`);
+  console.log(`  Done — ${total - failed} generated, ${failed} failed`);
+  if (failed > 0) console.log("  Re-run to retry failed files.");
+  console.log(`  Phonemes → public/audio/phonemes/`);
+  console.log(`  Words    → public/audio/words/\n`);
 }
 
 main().catch((err) => {

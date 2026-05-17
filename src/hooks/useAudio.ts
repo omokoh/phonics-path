@@ -1,46 +1,25 @@
 import { useCallback, useRef } from "react";
 
-// HOW TO ADD REAL RECORDINGS:
-// 1. Record each phoneme sound clearly (keep under 2 seconds).
-// 2. Export as MP3, 44 kHz, stereo, ~128 kbps.
-// 3. Name the file exactly as listed in phonemes.ts (e.g. "sh.mp3").
-// 4. Drop files into /public/audio/phonemes/
-// 5. Drop success chime into /public/audio/success.mp3
-// Real recordings take priority; Web Speech API fires only when an MP3 is missing.
+// HOW TO ADD / REPLACE RECORDINGS:
+// 1. Run: GOOGLE_TTS_API_KEY=<key> node generate-phonemes.js
+//    This regenerates all files in public/audio/phonemes/ and public/audio/words/
+// 2. Or drop hand-recorded MP3s directly into those folders (same filenames).
+// Real MP3s take priority; Web Speech API fires only when a file is missing.
 
-// Text passed to SpeechSynthesisUtterance for each phoneme.
-// Rules:
-//   - Elongate fricatives/nasals/liquids with repeated chars: "sss", "mmm", "fff"
-//   - Stops get a minimal schwa: "buh", "duh"
-//   - Digraphs use letter combos TTS engines voice as the blend, not as letters
-//   - Blends get a schwa to make them pronounceable: "bluh", "bruh"
+// Web Speech fallback text (used only when MP3s are absent)
 const phonemeToText: Record<string, string> = {
-  // Short vowels
   a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
-  // Fricatives / nasals / liquids — elongated so TTS sustains the sound
   f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
-  s: "sss",  v: "vvv",  z: "zzz",
-  // h: "huh" not "hhh" — TTS reads repeated h as letter names ("aitch aitch aitch")
-  h: "huh",
-  // Stops — minimal schwa to avoid silence
+  s: "sss",  v: "vvv",  z: "zzz",  h: "huh",
   b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
   k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
   x: "ks",   qu: "kwuh",
-  // Digraphs
-  sh: "shh",
-  // ch: "chuh" not "chh" — TTS may produce /k/+/h/ from bare "chh"; adding vowel locks in /tʃ/
-  ch: "chuh",
-  // th: "thuh" not "thh" — "thh" is ambiguous; "thuh" reliably voices the blend
-  th: "thuh",
-  wh: "wuh",  ph: "fff",  ck: "kuh",  ng: "nng",
-  // Consonant blends — use the natural English spelling TTS already knows from common words.
-  // "cl" not "kl": TTS knows cl from "clap"; it has no rule for bare "kl".
-  // "cr" not "kr": TTS knows cr from "crab"; "kr" risks "kay-arr" letter-spelling.
+  sh: "shh", ch: "chuh", th: "thuh", wh: "wuh",
+  ph: "fff", ck: "kuh",  ng: "nng",
   bl: "bluh", cl: "cluh", fl: "fluh", pl: "pluh", sl: "sluh",
   br: "bruh", cr: "cruh", dr: "druh", fr: "fruh", gr: "gruh",
   pr: "pruh", tr: "truh",
-  // Vowel teams (long vowel sounds)
-  ai: "ayy",  ay: "ayy",  ea: "ee",   ee: "ee",
+  ai: "ayy",  ay: "ayy",  ea: "ee",  ee: "ee",
   oa: "oh",   ow: "oh",
 };
 
@@ -52,65 +31,71 @@ function makeUtterance(text: string): SpeechSynthesisUtterance {
   return u;
 }
 
-// Card view: say "{phoneme sound} {example word}" as one utterance — e.g. "rrr red", "vvv van".
-// Game view: say the phoneme sound only (no example — keeps the test fair).
-function speakPhoneme(displayText: string, example?: string): void {
+function speakFallback(display: string, example?: string): void {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
-  const sound = phonemeToText[displayText] ?? displayText;
-  const text = example ? `${sound} ${example}` : sound;
+  const sound = phonemeToText[display] ?? display;
+  const text  = example ? `${sound} ${example}` : sound;
   window.speechSynthesis.speak(makeUtterance(text));
 }
 
-export function useAudio() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Pass example only from the card view, not from the game.
-  // When a real MP3 is available:
-  //   card → plays clean MP3 phoneme, then speaks the example word via TTS once it ends
-  //   game → plays clean MP3 phoneme only
-  // When no MP3 is found, falls back to TTS for the whole utterance.
-  const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+// Plays a word MP3 from /audio/words/, falling back to TTS if missing.
+function playWordAudio(id: string, example: string): void {
+  const audio = new Audio(`/audio/words/${id}.mp3`);
+  audio.play().catch(() => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(makeUtterance(example));
     }
+  });
+}
+
+export function useAudio() {
+  const audioRef    = useRef<HTMLAudioElement | null>(null);
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearAll = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
+
+  // Card view  — pass display + example:
+  //   phoneme MP3  →  600 ms pause  →  word MP3 (or TTS fallback)
+  //   Child hears: "mmmm" [pause] "map"
+  //
+  // Game view — pass display only:
+  //   phoneme MP3 alone — no word hint so the matching test stays fair
+  //
+  // If the phoneme MP3 is missing, the whole utterance falls back to TTS.
+  const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
+    clearAll();
+
+    const phonemeId = audioFile.replace(".mp3", "");
     const audio = new Audio(`/audio/phonemes/${audioFile}`);
     audioRef.current = audio;
 
     if (example) {
       audio.onended = () => {
-        if ("speechSynthesis" in window) {
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(makeUtterance(example));
-        }
+        timerRef.current = setTimeout(() => playWordAudio(phonemeId, example), 600);
       };
     }
 
-    audio.play().catch(() => {
-      // MP3 not found — fall back to TTS for everything
-      speakPhoneme(display, example);
-    });
-  }, []);
+    audio.play().catch(() => speakFallback(display, example));
+  }, [clearAll]);
 
   const playSuccess = useCallback(() => {
     const audio = new Audio("/audio/success.mp3");
     audio.play().catch(() => {
       if (!("speechSynthesis" in window)) return;
       window.speechSynthesis.cancel();
-      const u = makeUtterance("Great job!");
+      const u = makeUtterance("Amazing! You did it!");
       u.pitch = 1.4;
       window.speechSynthesis.speak(u);
     });
   }, []);
 
-  const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  }, []);
+  const stop = useCallback(() => clearAll(), [clearAll]);
 
   return { playPhoneme, playSuccess, stop };
 }
