@@ -4,12 +4,13 @@ import { useAudio } from "../hooks/useAudio";
 
 interface Props {
   phoneme: Phoneme;
-  onCorrect: () => void;
+  streak: number;
+  onCorrect: (emoji: string) => void;
 }
 
 type ChoiceState = "idle" | "correct" | "wrong";
 
-export function MatchGame({ phoneme, onCorrect }: Props) {
+export function MatchGame({ phoneme, streak, onCorrect }: Props) {
   const { playPhoneme, playSuccess, stop } = useAudio();
   const [states, setStates] = useState<Record<string, ChoiceState>>({});
   const [locked, setLocked] = useState(false);
@@ -17,7 +18,6 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
 
   const choices = useMemo(() => {
     const all = [phoneme.display, ...phoneme.distractors];
-    // Fisher-Yates shuffle
     for (let i = all.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [all[i], all[j]] = [all[j], all[i]];
@@ -46,7 +46,9 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
     if (choice === phoneme.display) {
       setStates({ [choice]: "correct" });
       setLocked(true);
-      playSuccess().then(() => setTimeout(onCorrect, 1500));
+      playSuccess(streak).then((emoji) => {
+        setTimeout(() => onCorrect(emoji), 1500);
+      });
     } else {
       setStates((prev) => ({ ...prev, [choice]: "wrong" }));
       setTimeout(() => {
@@ -56,13 +58,6 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
   };
 
   const replayAudio = () => playPhoneme(phoneme.audioFile, phoneme.display);
-
-  const getBorderColor = (choice: string) => {
-    const state = states[choice] ?? "idle";
-    if (state === "correct") return "#10b981";
-    if (state === "wrong") return "transparent";
-    return "transparent";
-  };
 
   const getBg = (choice: string) => {
     const state = states[choice] ?? "idle";
@@ -85,7 +80,6 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
 
   return (
     <div className="flex flex-col items-center justify-center gap-10 w-full max-w-lg mx-auto px-4">
-      {/* Replay button */}
       <button
         onClick={replayAudio}
         className="flex items-center justify-center rounded-full select-none active:scale-95 transition-transform duration-150"
@@ -101,10 +95,8 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
         🔊
       </button>
 
-      {/* Instruction hint — icon only, no text needed */}
       <div style={{ fontSize: "32px", opacity: 0.6 }}>👇</div>
 
-      {/* Choice buttons */}
       <div className="flex gap-6 justify-center flex-wrap">
         {choices.map((choice) => (
           <button
@@ -119,7 +111,7 @@ export function MatchGame({ phoneme, onCorrect }: Props) {
               fontSize: "clamp(32px, 8vw, 52px)",
               backgroundColor: getBg(choice),
               color: getTextColor(choice),
-              border: `4px solid ${getBorderColor(choice)}`,
+              border: "4px solid transparent",
               boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
             }}
             aria-label={`Choose ${choice}`}

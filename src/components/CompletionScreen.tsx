@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 interface Props {
   onPlayAgain: () => void;
   label?: string;
+  emoji?: string;
 }
 
 const STAR_COUNT = 18;
@@ -32,7 +33,7 @@ function generateStars(): Star[] {
   }));
 }
 
-export function CompletionScreen({ onPlayAgain, label = "Keep Going!" }: Props) {
+export function CompletionScreen({ onPlayAgain, label = "Keep Going!", emoji = "🌟" }: Props) {
   const starsRef = useRef<Star[]>(generateStars());
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function CompletionScreen({ onPlayAgain, label = "Keep Going!" }: Props) 
 
       <div className="flex flex-col items-center justify-center gap-8 z-10 px-6">
         <div className="celebration-bounce" style={{ fontSize: "clamp(80px, 18vw, 128px)" }}>
-          🌟
+          {emoji}
         </div>
 
         <div className="flex gap-3" style={{ fontSize: "clamp(36px, 8vw, 56px)" }}>

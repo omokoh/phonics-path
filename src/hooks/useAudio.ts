@@ -6,7 +6,6 @@ import { useCallback, useRef } from "react";
 // 2. Or drop hand-recorded MP3s directly into those folders (same filenames).
 // Real MP3s take priority; Web Speech API fires only when a file is missing.
 
-// Web Speech fallback text (used only when MP3s are absent)
 const phonemeToText: Record<string, string> = {
   a: "aah",  e: "eh",   i: "ih",   o: "aww",  u: "uh",
   f: "fff",  l: "lll",  m: "mmm",  n: "nnn",  r: "rrr",
@@ -22,6 +21,33 @@ const phonemeToText: Record<string, string> = {
   ai: "ayy",  ay: "ayy",  ea: "ee",  ee: "ee",
   oa: "oh",   ow: "oh",
 };
+
+export const SUCCESS_PHRASES = [
+  { file: "success_1.mp3",  emoji: "🌟", text: "Amazing! You did it!"       },
+  { file: "success_2.mp3",  emoji: "⭐", text: "Fantastic! Keep going!"     },
+  { file: "success_3.mp3",  emoji: "🎉", text: "Yes! You got it!"           },
+  { file: "success_4.mp3",  emoji: "🏆", text: "Woohoo! Great job!"         },
+  { file: "success_5.mp3",  emoji: "🎊", text: "Super! You're a star!"      },
+  { file: "success_6.mp3",  emoji: "🌈", text: "Brilliant! Well done!"      },
+  { file: "success_7.mp3",  emoji: "🚀", text: "Awesome! You're so smart!"  },
+  { file: "success_8.mp3",  emoji: "💫", text: "Perfect! You nailed it!"    },
+  { file: "success_9.mp3",  emoji: "🎯", text: "Incredible! Keep it up!"    },
+  { file: "success_10.mp3", emoji: "👑", text: "Great work! You're amazing!" },
+];
+
+// Indices that play for 3-in-a-row streak
+const STREAK_INDICES = [6, 7, 8];
+
+// Module-level so it persists across re-renders without being in hook state
+let lastSuccessIndex = -1;
+
+function pickPhrase(streak: number) {
+  const pool = streak >= 3 ? STREAK_INDICES : SUCCESS_PHRASES.map((_, i) => i);
+  const available = pool.filter((i) => i !== lastSuccessIndex);
+  const chosen = available[Math.floor(Math.random() * available.length)];
+  lastSuccessIndex = chosen;
+  return SUCCESS_PHRASES[chosen];
+}
 
 function makeUtterance(text: string): SpeechSynthesisUtterance {
   const u = new SpeechSynthesisUtterance(text);
@@ -39,7 +65,6 @@ function speakFallback(display: string, example?: string): void {
   window.speechSynthesis.speak(makeUtterance(text));
 }
 
-// Plays a word MP3 from /audio/words/, falling back to TTS if missing.
 function playWordAudio(id: string, example: string): void {
   const audio = new Audio(`/audio/words/${id}.mp3`);
   audio.play().catch(() => {
@@ -51,8 +76,8 @@ function playWordAudio(id: string, example: string): void {
 }
 
 export function useAudio() {
-  const audioRef    = useRef<HTMLAudioElement | null>(null);
-  const timerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearAll = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -60,14 +85,6 @@ export function useAudio() {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
-  // Card view  — pass display + example:
-  //   phoneme MP3  →  600 ms pause  →  word MP3 (or TTS fallback)
-  //   Child hears: "mmmm" [pause] "map"
-  //
-  // Game view — pass display only:
-  //   phoneme MP3 alone — no word hint so the matching test stays fair
-  //
-  // If the phoneme MP3 is missing, the whole utterance falls back to TTS.
   const playPhoneme = useCallback((audioFile: string, display: string, example?: string) => {
     clearAll();
 
@@ -84,18 +101,18 @@ export function useAudio() {
     audio.play().catch(() => speakFallback(display, example));
   }, [clearAll]);
 
-  // Returns a Promise that resolves when the success audio finishes playing,
-  // so callers can chain a celebration pause before advancing.
-  const playSuccess = useCallback((): Promise<void> => {
+  // Returns a Promise that resolves with the chosen emoji when audio finishes.
+  const playSuccess = useCallback((streak: number = 0): Promise<string> => {
+    const phrase = pickPhrase(streak);
     return new Promise((resolve) => {
-      const audio = new Audio("/audio/success.mp3");
-      audio.onended = () => resolve();
+      const audio = new Audio(`/audio/success/${phrase.file}`);
+      audio.onended = () => resolve(phrase.emoji);
       audio.play().catch(() => {
-        if (!("speechSynthesis" in window)) { resolve(); return; }
+        if (!("speechSynthesis" in window)) { resolve(phrase.emoji); return; }
         window.speechSynthesis.cancel();
-        const u = makeUtterance("Amazing! You did it!");
+        const u = makeUtterance(phrase.text);
         u.pitch = 1.4;
-        u.onend = () => resolve();
+        u.onend = () => resolve(phrase.emoji);
         window.speechSynthesis.speak(u);
       });
     });

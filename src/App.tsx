@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CompletionScreen } from "./components/CompletionScreen";
+import { HomeScreen } from "./components/HomeScreen";
 import { LevelCompleteScreen } from "./components/LevelCompleteScreen";
+import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
+import { readLevelPos, saveLevelPos } from "./data/levelData";
 import { MAX_LEVEL, phonemes } from "./data/phonemes";
 
 const SESSION_SIZE = 5;
 const LEVEL_KEY     = "phonics_level";
 const LEVEL_POS_KEY = "phonics_level_pos";
 
-type Mode = "card" | "game" | "session_complete" | "level_complete";
+type Mode = "home" | "level_select" | "card" | "game" | "session_complete" | "level_complete";
 
 function readInt(key: string, fallback: number): number {
   const n = parseInt(localStorage.getItem(key) ?? "", 10);
@@ -22,93 +25,130 @@ function save(key: string, value: number) {
 }
 
 export default function App() {
-  // Persist level (1–6) and position within that level across sessions
   const [currentLevel, setCurrentLevel] = useState(() => {
     const n = readInt(LEVEL_KEY, 1);
     return Math.min(Math.max(n, 1), MAX_LEVEL) as 1 | 2 | 3 | 4 | 5 | 6;
   });
-  const [levelPos, setLevelPos] = useState(() => Math.max(readInt(LEVEL_POS_KEY, 0), 0));
+  const [levelPos, setLevelPos] = useState(() => Math.max(readLevelPos(currentLevel), 0));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted]       = useState(0);
-  const [mode, setMode]                 = useState<Mode>("card");
+  const [mode, setMode]                 = useState<Mode>("home");
+  const [streak, setStreak]             = useState(0);
+  const [successEmoji, setSuccessEmoji] = useState("🌟");
 
-  // All phonemes for the active level, in definition order
   const levelPhonemes = useMemo(
     () => phonemes.filter((p) => p.level === currentLevel),
     [currentLevel]
   );
 
-  // Current session: up to SESSION_SIZE phonemes starting at levelPos
   const sessionPhonemes = useMemo(
     () => levelPhonemes.slice(levelPos, levelPos + SESSION_SIZE),
     [levelPhonemes, levelPos]
   );
 
-  const sessionSize     = sessionPhonemes.length;
-  const currentPhoneme  = sessionPhonemes[currentIndex];
+  const sessionSize    = sessionPhonemes.length;
+  const currentPhoneme = sessionPhonemes[currentIndex];
 
-  // Block multi-touch zoom on tablets
   useEffect(() => {
     const block = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
     document.addEventListener("touchstart", block, { passive: false });
     return () => document.removeEventListener("touchstart", block);
   }, []);
 
+  const handlePlay = useCallback(() => setMode("card"), []);
+
+  const handleChooseLevel = useCallback(() => setMode("level_select"), []);
+
+  const handleSelectLevel = useCallback((level: 1 | 2 | 3 | 4 | 5 | 6) => {
+    const pos = readLevelPos(level);
+    setCurrentLevel(level);
+    setLevelPos(pos);
+    setCurrentIndex(0);
+    setCompleted(0);
+    setStreak(0);
+    save(LEVEL_KEY, level);
+    save(LEVEL_POS_KEY, pos);
+    setMode("card");
+  }, []);
+
+  const handleGoHome = useCallback(() => setMode("home"), []);
+
   const handleCardNext = useCallback(() => setMode("game"), []);
 
-  const handleCorrect = useCallback(() => {
+  const handleCorrect = useCallback((emoji: string) => {
+    setSuccessEmoji(emoji);
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+
     const newCompleted = completed + 1;
     setCompleted(newCompleted);
 
     if (newCompleted < sessionSize) {
-      // More phonemes left in this session
       setCurrentIndex((i) => i + 1);
       setMode("card");
       return;
     }
 
-    // Session finished — advance position within level
     const newPos = levelPos + sessionSize;
     setLevelPos(newPos);
+    saveLevelPos(currentLevel, newPos);
     save(LEVEL_POS_KEY, newPos);
 
     if (newPos >= levelPhonemes.length) {
-      // All phonemes in this level are done
       setMode("level_complete");
     } else {
-      // More phonemes remain in the level — show mid-level celebration
       setMode("session_complete");
     }
-  }, [completed, sessionSize, levelPos, levelPhonemes.length]);
+  }, [streak, completed, sessionSize, levelPos, levelPhonemes.length, currentLevel]);
 
-  // "Keep Going!" — start the next session within the same level
   const handleSessionNext = useCallback(() => {
     setCurrentIndex(0);
     setCompleted(0);
     setMode("card");
   }, []);
 
-  // "Next Level!" / "Start Over!" — advance to next level (or wrap back to 1)
   const handleLevelNext = useCallback(() => {
     const nextLevel = currentLevel >= MAX_LEVEL
       ? 1
       : ((currentLevel + 1) as 1 | 2 | 3 | 4 | 5 | 6);
 
+    const nextPos = readLevelPos(nextLevel);
     setCurrentLevel(nextLevel);
-    setLevelPos(0);
+    setLevelPos(nextPos);
     setCurrentIndex(0);
     setCompleted(0);
+    setStreak(0);
     save(LEVEL_KEY, nextLevel);
-    save(LEVEL_POS_KEY, 0);
+    save(LEVEL_POS_KEY, nextPos);
     setMode("card");
   }, [currentLevel]);
+
+  if (mode === "home") {
+    return <HomeScreen onPlay={handlePlay} onChooseLevel={handleChooseLevel} />;
+  }
+
+  if (mode === "level_select") {
+    return (
+      <LevelSelectScreen
+        currentLevel={currentLevel}
+        onSelect={handleSelectLevel}
+        onBack={handleGoHome}
+      />
+    );
+  }
 
   if (mode === "level_complete") {
     return <LevelCompleteScreen level={currentLevel} onNext={handleLevelNext} />;
   }
 
   if (mode === "session_complete") {
-    return <CompletionScreen onPlayAgain={handleSessionNext} label="Keep Going!" />;
+    return (
+      <CompletionScreen
+        onPlayAgain={handleSessionNext}
+        label="Keep Going!"
+        emoji={successEmoji}
+      />
+    );
   }
 
   const levelColor = ["#f59e0b", "#10b981", "#3b82f6", "#a855f7", "#ec4899", "#ef4444"][currentLevel - 1];
@@ -119,8 +159,21 @@ export default function App() {
       style={{ backgroundColor: "#0f172a", touchAction: "manipulation" }}
     >
       <header className="flex items-center justify-between px-6 pt-6 pb-2">
-        {/* App name + level badge */}
         <div className="flex items-center gap-3">
+          {/* Home button */}
+          <button
+            onClick={handleGoHome}
+            className="flex items-center justify-center rounded-xl select-none active:scale-95 transition-transform"
+            style={{
+              width: "40px",
+              height: "40px",
+              backgroundColor: "#1e293b",
+              fontSize: "18px",
+            }}
+            aria-label="Go to home screen"
+          >
+            🏠
+          </button>
           <div
             className="font-bold tracking-wide"
             style={{ fontSize: "clamp(16px, 3.5vw, 24px)", color: "#f59e0b" }}
@@ -143,7 +196,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Session progress dots */}
         <ProgressDots total={sessionSize} completed={completed} />
       </header>
 
@@ -152,7 +204,11 @@ export default function App() {
           <PhonicsCard phoneme={currentPhoneme} onNext={handleCardNext} />
         )}
         {mode === "game" && currentPhoneme && (
-          <MatchGame phoneme={currentPhoneme} onCorrect={handleCorrect} />
+          <MatchGame
+            phoneme={currentPhoneme}
+            streak={streak}
+            onCorrect={handleCorrect}
+          />
         )}
       </main>
     </div>
