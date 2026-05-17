@@ -37,7 +37,10 @@ if (!API_KEY) {
 // Plain text like "buh" or "bluh" can NEVER be read as letter names —
 // the TTS engine always pronounces them as the intended phoneme sound.
 //
-// Exception: /ŋ/ (ng) has no reliable plain-text form, so it keeps IPA.
+// Exceptions in phonemeSSML below:
+//   ng       — no plain-text form; IPA nasal-velar
+//   f, v, s, z — plain repeated chars were read as letter names by Wavenet-F;
+//               IPA length mark (ː) forces a sustained fricative burst
 const phonemeText = {
   // ── Short vowels ─────────────────────────────────────────────────────────
   a:  "aah",          // /æ/ — not "ayy" (long A), not "ah" (open A)
@@ -49,25 +52,22 @@ const phonemeText = {
   // ── Nasals (sustained) ────────────────────────────────────────────────────
   m:  "mmm",
   n:  "nnn",
-  // ng: handled separately via IPA SSML (see phonemeSSML below)
+  // ng: IPA SSML (phonemeSSML below)
 
   // ── Liquids (sustained) ───────────────────────────────────────────────────
   l:  "lll",
   r:  "rrr",
 
-  // ── Fricatives (sustained — repeated char forces TTS to hold the sound) ───
-  f:  "fff",
-  s:  "sss",
-  v:  "vvv",
-  z:  "zzz",
-  h:  "hhh",          // aspirated; TTS reads hhh as the /h/ breath, not "aitch"
-  sh: "shhhh",        // /ʃ/ — four h's to sustain; can't be mis-read as letters
-  ph: "fff",          // same sound as f
-  th: "thuh",         // voiced /ð/ — "thuh" reads as /ð/+schwa, not "tee-aitch"
+  // ── Fricatives ────────────────────────────────────────────────────────────
+  // f, v, s, z → IPA SSML (phonemeSSML below) — plain chars mis-read as letter names
+  h:  "huh",          // single breath burst; "hhh" was read as "aitch aitch aitch"
+  sh: "shh",          // /ʃ/ — simpler than "shhhh", more reliably voiced
+  ph: "fff",          // same sound as /f/ — kept as plain text (not a standalone letter)
+  th_soft: "thuh",    // unvoiced /θ/ — as in "thin"
+  th_hard: "thuh",    // voiced /ð/ — as in "this"
   wh: "wuh",          // /w/ — same as w
 
   // ── Stops & affricates (schwa suffix makes the burst audible) ────────────
-  // The "-uh" suffix can never be read as a letter name ("bee"→"buh", etc.)
   b:  "buh",
   c:  "kuh",
   d:  "duh",
@@ -82,7 +82,6 @@ const phonemeText = {
   qu: "kwuh",         // /kw/
   ch: "chuh",         // /tʃ/ — "chuh" reads as the digraph + schwa
   ck: "kuh",          // same as k
-  wh: "wuh",          // same as w (listed again for clarity)
 
   // ── Consonant blends (cluster + schwa) ───────────────────────────────────
   bl: "bluh",   cl: "cluh",   fl: "fluh",   pl: "pluh",   sl: "sluh",
@@ -95,27 +94,30 @@ const phonemeText = {
   oa: "oh",     ow: "oh",
 };
 
-// /ŋ/ (ng) has no plain-text equivalent that TTS reliably renders as a
-// pure nasal-velar. Use IPA SSML with "ring" as display text: if IPA
-// fails the fallback is a real word ending in /ŋ/, not "en-gee".
+// IPA SSML for phonemes where plain text is unreliable in Wavenet-F.
+// Display text is a real word so if IPA fails the fallback is a word, not a letter name.
 const phonemeSSML = {
   ng: `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="ŋ">ring</phoneme></prosody></speak>`,
+  f:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="fː">fan</phoneme></prosody></speak>`,
+  v:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="vː">van</phoneme></prosody></speak>`,
+  s:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="sː">sun</phoneme></prosody></speak>`,
+  z:  `<speak><prosody rate="slow"><phoneme alphabet="ipa" ph="zː">zip</phoneme></prosody></speak>`,
 };
 
 // Example words — must stay in sync with src/data/phonemes.ts
 const phonemeWords = {
-  m:  "map",    s:  "sun",   a:  "ant",   t:  "top",   p:  "pet",
-  i:  "ink",    n:  "net",   o:  "ox",    b:  "bat",   c:  "cat",
-  d:  "dog",    e:  "egg",   f:  "fan",   g:  "gap",   h:  "hat",
-  j:  "jam",    k:  "kit",   l:  "leg",   r:  "red",   u:  "up",
-  v:  "van",    w:  "wet",   x:  "fox",   y:  "yak",   z:  "zip",
+  m:  "map",    s:  "sun",    a:  "ant",      t:  "top",   p:  "pet",
+  i:  "ink",    n:  "net",    o:  "ox",       b:  "bat",   c:  "cat",
+  d:  "dog",    e:  "egg",    f:  "fan",      g:  "gap",   h:  "hat",
+  j:  "jam",    k:  "kit",    l:  "leg",      r:  "red",   u:  "up",
+  v:  "van",    w:  "wet",    x:  "fox",      y:  "yak",   z:  "zip",
   qu: "queen",
-  bl: "blue",   cl: "clap",  fl: "flag",  pl: "play",  sl: "sled",
-  br: "brag",   cr: "crab",  dr: "drum",  fr: "frog",  gr: "grip",
+  bl: "blue",   cl: "clap",   fl: "flag",     pl: "play",  sl: "sled",
+  br: "brag",   cr: "crab",   dr: "drum",     fr: "frog",  gr: "grip",
   pr: "pram",   tr: "trip",
-  sh: "ship",   ch: "chip",  th: "this",  wh: "when",  ph: "phone",
-  ck: "duck",   ng: "ring",
-  ai: "rain",   ay: "day",   ea: "eat",   ee: "feet",  oa: "boat",
+  sh: "ship",   ch: "chip",   th_soft: "thin", th_hard: "this",
+  wh: "when",   ph: "phone",  ck: "duck",     ng: "ring",
+  ai: "rain",   ay: "day",    ea: "eat",      ee: "feet",  oa: "boat",
   ow: "snow",
 };
 
@@ -125,7 +127,7 @@ const ALL_IDS = [
   "d","e","f","g","h","j","k","l","r","u",
   "v","w","x","y","z","qu",
   "bl","cl","fl","pl","sl","br","cr","dr","fr","gr","pr","tr",
-  "sh","ch","th","wh","ph","ck","ng",
+  "sh","ch","th_soft","th_hard","wh","ph","ck","ng",
   "ai","ay","ea","ee","oa","ow",
 ];
 
@@ -212,7 +214,7 @@ async function main() {
   // ── Pass 1: phoneme sounds ────────────────────────────────────────────────
   console.log("── Pass 1: phoneme sounds ──");
   for (const id of ids) {
-    const desc = phonemeSSML[id] ? `[IPA ŋ]` : `"${phonemeText[id]}"`;
+    const desc = phonemeSSML[id] ? `[IPA]   ` : `"${phonemeText[id]}"`;
     process.stdout.write(`  ${id.padEnd(4)}  ${desc.padEnd(10)}  → `);
     try {
       const buf = await synthesizePhoneme(id);

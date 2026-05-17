@@ -61,13 +61,14 @@ export const phonemes: Phoneme[] = [
   { id: "tr", display: "tr", audioFile: "tr.mp3", example: "trip",  distractors: ["dr", "cr"],      level: 4 },
 
   // ── Level 5: Digraphs ──────────────────────────────────────────────────────
-  { id: "sh", display: "sh", audioFile: "sh.mp3", example: "ship",  distractors: ["ch", "th"],      level: 5 },
-  { id: "ch", display: "ch", audioFile: "ch.mp3", example: "chip",  distractors: ["sh", "wh"],      level: 5 },
-  { id: "th", display: "th", audioFile: "th.mp3", example: "this",  distractors: ["sh", "wh"],      level: 5 },
-  { id: "wh", display: "wh", audioFile: "wh.mp3", example: "when",  distractors: ["th", "ch"],      level: 5 },
-  { id: "ph", display: "ph", audioFile: "ph.mp3", example: "phone", distractors: ["f",  "wh"],      level: 5 },
-  { id: "ck", display: "ck", audioFile: "ck.mp3", example: "duck",  distractors: ["k",  "ch"],      level: 5 },
-  { id: "ng", display: "ng", audioFile: "ng.mp3", example: "ring",  distractors: ["n",  "nk"],      level: 5 },
+  { id: "sh",      display: "sh", audioFile: "sh.mp3",      example: "ship",  distractors: ["ch", "th"],           level: 5 },
+  { id: "ch",      display: "ch", audioFile: "ch.mp3",      example: "chip",  distractors: ["sh", "wh"],           level: 5 },
+  { id: "th_soft", display: "th", audioFile: "th_soft.mp3", example: "thin",  distractors: ["f",  "sh"],           level: 5 },
+  { id: "th_hard", display: "th", audioFile: "th_hard.mp3", example: "this",  distractors: ["sh", "wh"],           level: 5 },
+  { id: "wh",      display: "wh", audioFile: "wh.mp3",      example: "when",  distractors: ["th_hard", "ch"],      level: 5 },
+  { id: "ph",      display: "ph", audioFile: "ph.mp3",      example: "phone", distractors: ["f",  "wh"],           level: 5 },
+  { id: "ck",      display: "ck", audioFile: "ck.mp3",      example: "duck",  distractors: ["k",  "ch"],           level: 5 },
+  { id: "ng",      display: "ng", audioFile: "ng.mp3",      example: "ring",  distractors: ["n",  "nk"],           level: 5 },
 
   // ── Level 6: Long vowels + vowel teams ────────────────────────────────────
   { id: "ai", display: "ai", audioFile: "ai.mp3", example: "rain",  distractors: ["ay", "ee"],      level: 6 },

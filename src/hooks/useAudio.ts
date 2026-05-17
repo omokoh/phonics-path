@@ -13,7 +13,7 @@ const phonemeToText: Record<string, string> = {
   b: "buh",  c: "kuh",  d: "duh",  g: "guh",  j: "juh",
   k: "kuh",  p: "puh",  t: "tuh",  w: "wuh",  y: "yuh",
   x: "ks",   qu: "kwuh",
-  sh: "shh", ch: "chuh", th: "thuh", wh: "wuh",
+  sh: "shh", ch: "chuh", th_soft: "thuh", th_hard: "thuh", wh: "wuh",
   ph: "fff", ck: "kuh",  ng: "nng",
   bl: "bluh", cl: "cluh", fl: "fluh", pl: "pluh", sl: "sluh",
   br: "bruh", cr: "cruh", dr: "druh", fr: "fruh", gr: "gruh",

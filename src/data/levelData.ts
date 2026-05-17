@@ -11,7 +11,7 @@ export const LEVEL_META: LevelMeta[] = [
   { level: 2, icon: "B",  label: "More Sounds",   color: "#10b981", total: 10 },
   { level: 3, icon: "Z",  label: "Last Sounds",   color: "#3b82f6", total: 6  },
   { level: 4, icon: "BL", label: "Blends",        color: "#a855f7", total: 12 },
-  { level: 5, icon: "SH", label: "Digraphs",      color: "#ec4899", total: 7  },
+  { level: 5, icon: "SH", label: "Digraphs",      color: "#ec4899", total: 8  },
   { level: 6, icon: "AI", label: "Vowel Teams",   color: "#ef4444", total: 6  },
 ];
 
