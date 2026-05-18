@@ -7,7 +7,7 @@ import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
 import { readLevelPos, saveLevelPos } from "./data/levelData";
-import { MAX_LEVEL, phonemes } from "./data/phonemes";
+import { MAX_LEVEL, phonemes, type Phoneme } from "./data/phonemes";
 
 const SESSION_SIZE = 5;
 const LEVEL_KEY     = "phonics_level";
@@ -29,12 +29,17 @@ export default function App() {
     const n = readInt(LEVEL_KEY, 1);
     return Math.min(Math.max(n, 1), MAX_LEVEL) as 1 | 2 | 3 | 4 | 5 | 6;
   });
-  const [levelPos, setLevelPos] = useState(() => Math.max(readLevelPos(currentLevel), 0));
+  const [levelPos, setLevelPos]     = useState(() => Math.max(readLevelPos(currentLevel), 0));
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [completed, setCompleted]       = useState(0);
-  const [mode, setMode]                 = useState<Mode>("home");
-  const [streak, setStreak]             = useState(0);
+  const [completed, setCompleted]   = useState(0);
+  const [mode, setMode]             = useState<Mode>("home");
+  const [streak, setStreak]         = useState(0);
   const [successEmoji, setSuccessEmoji] = useState("🌟");
+
+  // Review session: phonemes the child got wrong at least once
+  const [needsReviewIds, setNeedsReviewIds] = useState<string[]>([]);
+  const [reviewPhonemes, setReviewPhonemes] = useState<Phoneme[] | null>(null);
+  const [isReview, setIsReview]             = useState(false);
 
   const levelPhonemes = useMemo(
     () => phonemes.filter((p) => p.level === currentLevel),
@@ -46,8 +51,10 @@ export default function App() {
     [levelPhonemes, levelPos]
   );
 
-  const sessionSize    = sessionPhonemes.length;
-  const currentPhoneme = sessionPhonemes[currentIndex];
+  // Active phoneme list: review list takes precedence during review round
+  const activePhonemes = reviewPhonemes ?? sessionPhonemes;
+  const sessionSize    = activePhonemes.length;
+  const currentPhoneme = activePhonemes[currentIndex];
 
   useEffect(() => {
     const block = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
@@ -66,6 +73,9 @@ export default function App() {
     setCurrentIndex(0);
     setCompleted(0);
     setStreak(0);
+    setNeedsReviewIds([]);
+    setReviewPhonemes(null);
+    setIsReview(false);
     save(LEVEL_KEY, level);
     save(LEVEL_POS_KEY, pos);
     setMode("card");
@@ -75,13 +85,36 @@ export default function App() {
 
   const handleCardNext = useCallback(() => setMode("game"), []);
 
-  const handleCorrect = useCallback((emoji: string) => {
+  // Called by MatchGame with the emoji from the success phrase and whether
+  // the child needed at least one wrong-answer re-listen on this phoneme.
+  const handleCorrect = useCallback((emoji: string, neededReview: boolean) => {
     setSuccessEmoji(emoji);
-    const newStreak = streak + 1;
-    setStreak(newStreak);
+    setStreak((s) => s + 1);
 
     const newCompleted = completed + 1;
     setCompleted(newCompleted);
+
+    // ── Review round ──────────────────────────────────────────────────
+    if (isReview) {
+      if (newCompleted < (reviewPhonemes?.length ?? 0)) {
+        setCurrentIndex((i) => i + 1);
+        setMode("card");
+        return;
+      }
+      // Review complete → celebrate
+      setReviewPhonemes(null);
+      setNeedsReviewIds([]);
+      setIsReview(false);
+      setMode("session_complete");
+      return;
+    }
+
+    // ── Normal round ──────────────────────────────────────────────────
+    // Collect this phoneme if it needed review
+    const updatedReviewIds = neededReview
+      ? [...needsReviewIds, currentPhoneme.id]
+      : needsReviewIds;
+    if (neededReview) setNeedsReviewIds(updatedReviewIds);
 
     if (newCompleted < sessionSize) {
       setCurrentIndex((i) => i + 1);
@@ -89,6 +122,7 @@ export default function App() {
       return;
     }
 
+    // Session done — advance level position
     const newPos = levelPos + sessionSize;
     setLevelPos(newPos);
     saveLevelPos(currentLevel, newPos);
@@ -96,14 +130,33 @@ export default function App() {
 
     if (newPos >= levelPhonemes.length) {
       setMode("level_complete");
-    } else {
-      setMode("session_complete");
+      return;
     }
-  }, [streak, completed, sessionSize, levelPos, levelPhonemes.length, currentLevel]);
+
+    // Start review round if any phonemes need it
+    if (updatedReviewIds.length > 0) {
+      const reviewList = phonemes.filter((p) => updatedReviewIds.includes(p.id));
+      setReviewPhonemes(reviewList);
+      setIsReview(true);
+      setCurrentIndex(0);
+      setCompleted(0);
+      setNeedsReviewIds([]);
+      setMode("card");
+      return;
+    }
+
+    setMode("session_complete");
+  }, [
+    completed, isReview, reviewPhonemes, needsReviewIds,
+    currentPhoneme, sessionSize, levelPos, levelPhonemes.length, currentLevel,
+  ]);
 
   const handleSessionNext = useCallback(() => {
     setCurrentIndex(0);
     setCompleted(0);
+    setNeedsReviewIds([]);
+    setReviewPhonemes(null);
+    setIsReview(false);
     setMode("card");
   }, []);
 
@@ -118,11 +171,15 @@ export default function App() {
     setCurrentIndex(0);
     setCompleted(0);
     setStreak(0);
+    setNeedsReviewIds([]);
+    setReviewPhonemes(null);
+    setIsReview(false);
     save(LEVEL_KEY, nextLevel);
     save(LEVEL_POS_KEY, nextPos);
     setMode("card");
   }, [currentLevel]);
 
+  // ── Screens that replace the whole view ──────────────────────────────
   if (mode === "home") {
     return <HomeScreen onPlay={handlePlay} onChooseLevel={handleChooseLevel} />;
   }
@@ -151,7 +208,7 @@ export default function App() {
     );
   }
 
-  const levelColor = ["#f59e0b", "#10b981", "#3b82f6", "#a855f7", "#ec4899", "#ef4444"][currentLevel - 1];
+  const levelColor = ["#f59e0b","#10b981","#3b82f6","#a855f7","#ec4899","#ef4444"][currentLevel - 1];
 
   return (
     <div
@@ -160,16 +217,10 @@ export default function App() {
     >
       <header className="flex items-center justify-between px-6 pt-6 pb-2">
         <div className="flex items-center gap-3">
-          {/* Home button */}
           <button
             onClick={handleGoHome}
             className="flex items-center justify-center rounded-xl select-none active:scale-95 transition-transform"
-            style={{
-              width: "40px",
-              height: "40px",
-              backgroundColor: "#1e293b",
-              fontSize: "18px",
-            }}
+            style={{ width: "40px", height: "40px", backgroundColor: "#1e293b", fontSize: "18px" }}
             aria-label="Go to home screen"
           >
             🏠
@@ -180,19 +231,20 @@ export default function App() {
           >
             PhonicsPath
           </div>
+          {/* Level badge — shows Review during review round */}
           <div
             className="rounded-full font-bold flex items-center justify-center"
             style={{
-              backgroundColor: levelColor,
+              backgroundColor: isReview ? "#f59e0b" : levelColor,
               color: "#0f172a",
-              fontSize: "clamp(11px, 2.5vw, 15px)",
-              minWidth: "32px",
+              fontSize: "clamp(10px, 2.2vw, 14px)",
+              minWidth: "36px",
               height: "32px",
               paddingInline: "10px",
             }}
-            aria-label={`Level ${currentLevel}`}
+            aria-label={isReview ? "Review round" : `Level ${currentLevel}`}
           >
-            L{currentLevel}
+            {isReview ? "Review" : `L${currentLevel}`}
           </div>
         </div>
 

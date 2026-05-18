@@ -54,11 +54,15 @@ function makeUtterance(text: string): SpeechSynthesisUtterance {
   return u;
 }
 
-function speakFallback(display: string): void {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const sound = phonemeToText[display] ?? display;
-  window.speechSynthesis.speak(makeUtterance(sound));
+function speakFallback(display: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!("speechSynthesis" in window)) { resolve(); return; }
+    window.speechSynthesis.cancel();
+    const sound = phonemeToText[display] ?? display;
+    const u = makeUtterance(sound);
+    u.onend = () => resolve();
+    window.speechSynthesis.speak(u);
+  });
 }
 
 export function useAudio() {
@@ -69,13 +73,17 @@ export function useAudio() {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   }, []);
 
-  // Read Naturally clips include phoneme + example word in one recording.
-  // Just play the file — no chained word audio needed.
-  const playPhoneme = useCallback((audioFile: string, display: string) => {
+  // Returns a Promise that resolves when the audio clip finishes playing.
+  // Resolves after a 5 s safety timeout if the clip is stopped early.
+  const playPhoneme = useCallback((audioFile: string, display: string): Promise<void> => {
     clearAll();
-    const audio = new Audio(`/audio/phonemes/${audioFile}`);
-    audioRef.current = audio;
-    audio.play().catch(() => speakFallback(display));
+    return new Promise((resolve) => {
+      const audio = new Audio(`/audio/phonemes/${audioFile}`);
+      audioRef.current = audio;
+      const safetyTimer = setTimeout(resolve, 5000);
+      audio.onended = () => { clearTimeout(safetyTimer); resolve(); };
+      audio.play().catch(() => { clearTimeout(safetyTimer); speakFallback(display).then(resolve); });
+    });
   }, [clearAll]);
 
   const playSuccess = useCallback((streak: number = 0): Promise<string> => {
