@@ -165,16 +165,10 @@ const successPhrases = [
   { file: "success_10.mp3", text: "Great work! You're amazing!" },
 ];
 
-// ── Level 8 blending words ────────────────────────────────────────────────────
-// Full word audio for each blending word (rate 0.88, pitch 1.5).
-// Stored in public/audio/blending/{word}.mp3.
-// Prompt: "What word do those sounds make?" → public/audio/prompts/blending-prompt.mp3
-const BLENDING_WORDS = [
-  "at","big","brag","bus","can","cat","chip","clap","crab","cup",
-  "dog","drum","fan","flag","frog","grab","hat","hop","in","it",
-  "jet","mug","nap","on","pin","red","ring","ship","slip","stop",
-  "sun","thin","trip","up","wet","whip",
-];
+// ── Level 8 blending prompt ───────────────────────────────────────────────────
+// Individual phoneme sounds come from existing public/audio/phonemes/ files.
+// Only the prompt needs to be generated.
+// Stored at public/audio/prompts/blending-prompt.mp3
 const BLENDING_PROMPT = "What word do those sounds make?";
 
 // ── Level 7 rhyme words ───────────────────────────────────────────────────────
@@ -211,29 +205,14 @@ async function main() {
   let ok = 0, fail = 0;
 
   if (isBlending) {
-    // ── Pass 4: Level 8 blending word audio + prompt ──────────────────────
-    const blendingDir = join(__dirname, "public/audio/blending");
-    const promptsDir  = join(__dirname, "public/audio/prompts");
-    await mkdir(blendingDir, { recursive: true });
-    await mkdir(promptsDir,  { recursive: true });
+    // ── Pass 4: Level 8 prompt only ───────────────────────────────────────
+    // Phoneme sounds reuse existing public/audio/phonemes/ files.
+    const promptsDir = join(__dirname, "public/audio/prompts");
+    await mkdir(promptsDir, { recursive: true });
 
-    console.log(`\nGenerating ${BLENDING_WORDS.length} blending words + 1 prompt…\n`);
-    console.log("── Pass 4: blending words ──");
-    for (const word of BLENDING_WORDS) {
-      process.stdout.write(`  ${word.padEnd(10)}  → `);
-      try {
-        const buf = await callTTS({ text: word }, 0.88, 1.5);
-        await writeFile(join(blendingDir, `${word}.mp3`), buf);
-        console.log("✓");
-        ok++;
-      } catch (err) {
-        console.log(`✗  ${err.message}`);
-        fail++;
-      }
-      await delay(200);
-    }
-
-    process.stdout.write(`  [prompt]    → `);
+    console.log(`\nGenerating blending prompt…\n`);
+    console.log("── Pass 4: blending prompt ──");
+    process.stdout.write(`  "What word do those sounds make?"  → `);
     try {
       const buf = await callTTS({ text: BLENDING_PROMPT }, 0.85, 2.0);
       await writeFile(join(promptsDir, "blending-prompt.mp3"), buf);
@@ -247,7 +226,7 @@ async function main() {
     console.log(`\n──────────────────────────────`);
     console.log(`  ${ok} generated, ${fail} failed`);
     if (fail) console.log("  Re-run to retry failed files.");
-    console.log(`  public/audio/blending/ + public/audio/prompts/\n`);
+    console.log(`  public/audio/prompts/blending-prompt.mp3\n`);
     return;
   }
 
