@@ -7,10 +7,12 @@ import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
+import { BlendingGame } from "./components/BlendingGame";
 import { RhymeGame } from "./components/RhymeGame";
 import { ThemeBg } from "./components/ThemeBg";
 import { LEVEL_META, levelPosKey, readLevelPos, saveLevelPos } from "./data/levelData";
 import { MAX_LEVEL, phonemes, type Phoneme } from "./data/phonemes";
+import { blendings, type BlendSet } from "./data/blending";
 import { rhymes, type RhymeSet } from "./data/rhymes";
 import { useTheme } from "./hooks/useTheme";
 
@@ -18,7 +20,7 @@ const SESSION_SIZE   = 5;
 const LEVEL_KEY      = "phonics_level";
 const LEVEL_POS_KEY  = "phonics_level_pos";
 
-type Level = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Level = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 type Mode =
   | "home" | "level_select"
@@ -42,7 +44,7 @@ function effectivePos(level: number): number {
   return raw;
 }
 
-const LEVEL_COLORS = ["#f59e0b","#10b981","#3b82f6","#a855f7","#ec4899","#ef4444","#0d9488"];
+const LEVEL_COLORS = ["#f59e0b","#10b981","#3b82f6","#a855f7","#ec4899","#ef4444","#0d9488","#4f46e5"];
 
 export default function App() {
   const { theme } = useTheme();
@@ -63,7 +65,8 @@ export default function App() {
   const [reviewPhonemes, setReviewPhonemes] = useState<Phoneme[] | null>(null);
   const [isReview, setIsReview]             = useState(false);
 
-  const isRhymeLevel = currentLevel === 7;
+  const isRhymeLevel    = currentLevel === 7;
+  const isBlendingLevel = currentLevel === 8;
 
   // L1–6 phoneme data
   const levelPhonemes = useMemo(
@@ -85,8 +88,17 @@ export default function App() {
   );
   const currentRhyme: RhymeSet | undefined = isRhymeLevel ? sessionRhymes[currentIndex] : undefined;
 
-  // Displayed session size and completed count for ProgressDots
-  const displaySize      = isRhymeLevel ? sessionRhymes.length : sessionSize;
+  // L8 blending data
+  const sessionBlendings = useMemo(
+    () => blendings.slice(levelPos, levelPos + SESSION_SIZE),
+    [levelPos]
+  );
+  const currentBlending: BlendSet | undefined = isBlendingLevel ? sessionBlendings[currentIndex] : undefined;
+
+  // Progress dot display
+  const displaySize      = isRhymeLevel ? sessionRhymes.length
+                         : isBlendingLevel ? sessionBlendings.length
+                         : sessionSize;
   const displayCompleted = completed;
 
   useEffect(() => {
@@ -95,14 +107,18 @@ export default function App() {
     return () => document.removeEventListener("touchstart", block);
   }, []);
 
-  // Safety net: if card/game mode has nothing to show, route to completion screens.
+  // Safety net: nothing to show → route to correct completion screen.
   useEffect(() => {
     if (isRhymeLevel) {
-      if (mode === "card" && sessionRhymes.length === 0) setMode("grand_complete");
+      if (mode === "card" && sessionRhymes.length === 0)
+        setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
+    } else if (isBlendingLevel) {
+      if (mode === "card" && sessionBlendings.length === 0)
+        setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
     } else if ((mode === "card" || mode === "game") && !isReview && sessionPhonemes.length === 0) {
       setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
     }
-  }, [mode, isReview, sessionPhonemes.length, sessionRhymes.length, currentLevel, isRhymeLevel]);
+  }, [mode, isReview, sessionPhonemes.length, sessionRhymes.length, sessionBlendings.length, currentLevel, isRhymeLevel, isBlendingLevel]);
 
   // ── Navigation handlers ──────────────────────────────────────────────
 
@@ -160,19 +176,16 @@ export default function App() {
       return;
     }
 
-    // Session complete — advance level position
     const newPos = levelPos + sessionSize;
     setLevelPos(newPos);
     saveLevelPos(currentLevel, newPos);
     save(LEVEL_POS_KEY, newPos);
 
-    // Level fully done?
     if (newPos >= levelPhonemes.length) {
       setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
       return;
     }
 
-    // Review round before session_complete?
     if (updatedReviewIds.length > 0) {
       const reviewList = phonemes.filter((p) => updatedReviewIds.includes(p.id));
       setReviewPhonemes(reviewList);
@@ -190,33 +203,48 @@ export default function App() {
     currentPhoneme, sessionSize, levelPos, levelPhonemes.length, currentLevel,
   ]);
 
-  // Handler for L7 rhyme game (no review round)
-  const handleRhymeCorrect = useCallback((emoji: string, _neededReview: boolean) => {
-    setSuccessEmoji(emoji);
-    setStreak((s) => s + 1);
+  // Shared handler for L7 (rhyme) and L8 (blending) — no review round
+  function makeSpecialHandler(
+    sessionLen: () => number,
+    totalLen: () => number,
+    levelNum: number
+  ) {
+    return (emoji: string, _neededReview: boolean) => {
+      setSuccessEmoji(emoji);
+      setStreak((s) => s + 1);
 
-    const newCompleted = completed + 1;
-    setCompleted(newCompleted);
+      const newCompleted = completed + 1;
+      setCompleted(newCompleted);
 
-    if (newCompleted < sessionRhymes.length) {
-      setCurrentIndex((i) => i + 1);
-      setMode("card");
-      return;
-    }
+      if (newCompleted < sessionLen()) {
+        setCurrentIndex((i) => i + 1);
+        setMode("card");
+        return;
+      }
 
-    // Session complete — advance position
-    const newPos = levelPos + sessionRhymes.length;
-    setLevelPos(newPos);
-    saveLevelPos(7, newPos);
-    save(LEVEL_POS_KEY, newPos);
+      const newPos = levelPos + sessionLen();
+      setLevelPos(newPos);
+      saveLevelPos(levelNum, newPos);
+      save(LEVEL_POS_KEY, newPos);
 
-    if (newPos >= rhymes.length) {
-      setMode("grand_complete");
-      return;
-    }
+      setMode(newPos >= totalLen()
+        ? (currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete")
+        : "session_complete"
+      );
+    };
+  }
 
-    setMode("session_complete");
-  }, [completed, sessionRhymes.length, levelPos]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleRhymeCorrect = useCallback(
+    makeSpecialHandler(() => sessionRhymes.length, () => rhymes.length, 7),
+    [completed, sessionRhymes.length, levelPos, currentLevel]
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleBlendingCorrect = useCallback(
+    makeSpecialHandler(() => sessionBlendings.length, () => blendings.length, 8),
+    [completed, sessionBlendings.length, levelPos, currentLevel]
+  );
 
   const handleSessionNext = useCallback(() => {
     setCurrentIndex(0);
@@ -303,7 +331,7 @@ export default function App() {
     );
   }
 
-  const levelColor = LEVEL_COLORS[currentLevel - 1] ?? "#0d9488";
+  const levelColor = LEVEL_COLORS[currentLevel - 1] ?? "#4f46e5";
 
   return (
     <div
@@ -349,21 +377,16 @@ export default function App() {
 
       <main className="flex-1 flex items-center justify-center py-6" style={{ position: "relative", zIndex: 1 }}>
         {mode === "card" && isRhymeLevel && currentRhyme && (
-          <RhymeGame
-            rhyme={currentRhyme}
-            streak={streak}
-            onCorrect={handleRhymeCorrect}
-          />
+          <RhymeGame rhyme={currentRhyme} streak={streak} onCorrect={handleRhymeCorrect} />
         )}
-        {mode === "card" && !isRhymeLevel && currentPhoneme && (
+        {mode === "card" && isBlendingLevel && currentBlending && (
+          <BlendingGame blend={currentBlending} streak={streak} onCorrect={handleBlendingCorrect} />
+        )}
+        {mode === "card" && !isRhymeLevel && !isBlendingLevel && currentPhoneme && (
           <PhonicsCard phoneme={currentPhoneme} onNext={handleCardNext} />
         )}
         {mode === "game" && currentPhoneme && (
-          <MatchGame
-            phoneme={currentPhoneme}
-            streak={streak}
-            onCorrect={handleCorrect}
-          />
+          <MatchGame phoneme={currentPhoneme} streak={streak} onCorrect={handleCorrect} />
         )}
       </main>
     </div>

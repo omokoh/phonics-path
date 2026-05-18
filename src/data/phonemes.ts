@@ -78,4 +78,4 @@ export const phonemes: Phoneme[] = [
   { id: "ow", display: "ow", audioFile: "ow.mp3", example: "rope",  distractors: ["oa", "ay"],      level: 6 },
 ];
 
-export const MAX_LEVEL = 7;
+export const MAX_LEVEL = 8;

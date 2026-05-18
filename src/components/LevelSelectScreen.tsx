@@ -13,7 +13,7 @@ import { ThemeBg } from "./ThemeBg";
 
 interface Props {
   currentLevel: number;
-  onSelect: (level: 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
+  onSelect: (level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8) => void;
   onBack: () => void;
 }
 
@@ -135,7 +135,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
             return (
               <button
                 key={meta.level}
-                onClick={() => unlocked && onSelect(meta.level as 1 | 2 | 3 | 4 | 5 | 6 | 7)}
+                onClick={() => unlocked && onSelect(meta.level as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8)}
                 onPointerDown={() => !unlocked && startLongPress(meta.level)}
                 onPointerUp={cancelLongPress}
                 onPointerLeave={cancelLongPress}

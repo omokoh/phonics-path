@@ -261,3 +261,36 @@ button {
   100% { transform: translateY(0)      rotate(0deg);   opacity: 1; }
 }
 .lvl-crown-drop { animation: crownDrop 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both; }
+
+/* ═══ BlendingGame — sound dots ══════════════════════════════════════════════ */
+
+/* Dot lights up when its phoneme plays */
+@keyframes dotLight {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1.08); }
+}
+.dot-lit { animation: dotLight 0.25s ease-out both; }
+
+/* All dots pulse together before options reveal */
+@keyframes dotPulseAll {
+  0%, 100% { transform: scale(1.08); }
+  50%       { transform: scale(1.22); }
+}
+.dot-pulse-all { animation: dotPulseAll 0.4s ease-in-out both; }
+
+/* Dots merge into word on correct answer */
+@keyframes dotMerge {
+  0%   { transform: scale(1.08); opacity: 1; }
+  40%  { transform: scale(1.2);  opacity: 0.9; }
+  100% { transform: scale(0) translateY(-12px); opacity: 0; }
+}
+.dot-merging { animation: dotMerge 0.38s ease-in both; }
+
+/* Merged word bursts in where dots were */
+@keyframes wordBurst {
+  0%   { transform: scale(0.3) rotate(-6deg); opacity: 0; }
+  55%  { transform: scale(1.2) rotate(2deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+.word-burst { animation: wordBurst 0.48s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both; }
