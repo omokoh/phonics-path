@@ -8,6 +8,8 @@ import {
   parentUnlock,
   readLevelPos,
 } from "../data/levelData";
+import { useTheme } from "../hooks/useTheme";
+import { ThemeBg } from "./ThemeBg";
 
 interface Props {
   currentLevel: number;
@@ -15,14 +17,24 @@ interface Props {
   onBack: () => void;
 }
 
-function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+function ProgressBar({
+  value,
+  max,
+  color,
+  trackBg,
+}: {
+  value: number;
+  max: number;
+  color: string;
+  trackBg: string;
+}) {
   const pct = Math.min(100, Math.round((value / max) * 100));
   return (
     <div
       style={{
         width: "100%",
         height: "8px",
-        backgroundColor: "rgba(255,255,255,0.15)",
+        backgroundColor: trackBg,
         borderRadius: "4px",
         overflow: "hidden",
       }}
@@ -41,10 +53,15 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
 }
 
 export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
+  const { theme } = useTheme();
   const [parentUnlocked, setParentUnlocked] = useState<Set<number>>(getParentUnlocked);
   // Force re-read of localStorage values for fresh progress
   const [, forceUpdate] = useState(0);
   useEffect(() => { forceUpdate((n) => n + 1); }, []);
+
+  // Determine if current theme is light (princess) for progress bar track
+  const isLightTheme = theme.bg.startsWith('#f');
+  const progressTrackBg = isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.15)';
 
   // Long-press timer for parent unlock
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,19 +80,21 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
   return (
     <div
       className="min-h-screen w-full flex flex-col"
-      style={{ backgroundColor: "#0f172a" }}
+      style={{ backgroundColor: theme.bg, position: 'relative' }}
     >
+      <ThemeBg bgEffect={theme.bgEffect} />
+
       {/* Header */}
-      <header className="flex items-center gap-4 px-6 pt-6 pb-4">
+      <header className="flex items-center gap-4 px-6 pt-6 pb-4" style={{ position: 'relative', zIndex: 1 }}>
         <button
           onClick={onBack}
           className="flex items-center justify-center rounded-2xl select-none active:scale-95 transition-transform"
           style={{
             width: "52px",
             height: "52px",
-            backgroundColor: "#1e293b",
+            backgroundColor: theme.headerButtonBg,
             fontSize: "22px",
-            color: "#f59e0b",
+            color: theme.accent,
           }}
           aria-label="Back to home"
         >
@@ -83,14 +102,14 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
         </button>
         <div
           className="font-bold"
-          style={{ fontSize: "clamp(18px, 4vw, 28px)", color: "#f1f5f9" }}
+          style={{ fontSize: "clamp(18px, 4vw, 28px)", color: theme.accent }}
         >
           Choose Level
         </div>
       </header>
 
       {/* Level cards grid */}
-      <main className="flex-1 px-4 pb-8">
+      <main className="flex-1 px-4 pb-8" style={{ position: 'relative', zIndex: 1 }}>
         <div
           className="grid gap-4"
           style={{
@@ -109,9 +128,9 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
             if (complete)  borderStyle = `3px solid #f59e0b`;
             if (isCurrent && !complete) borderStyle = `3px solid ${meta.color}`;
 
-            let boxShadow = "0 4px 16px rgba(0,0,0,0.3)";
-            if (isCurrent && !complete) boxShadow = `0 0 0 4px ${meta.color}44, 0 6px 24px rgba(0,0,0,0.4)`;
-            if (complete) boxShadow = `0 0 0 4px #f59e0b44, 0 6px 24px rgba(0,0,0,0.4)`;
+            let boxShadow = `0 4px 16px ${theme.surfaceShadow}`;
+            if (isCurrent && !complete) boxShadow = `0 0 0 4px ${meta.color}44, 0 6px 24px ${theme.surfaceShadow}`;
+            if (complete) boxShadow = `0 0 0 4px #f59e0b44, 0 6px 24px ${theme.surfaceShadow}`;
 
             return (
               <button
@@ -124,7 +143,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
                 style={{
                   minHeight: "160px",
                   padding: "20px 16px 16px",
-                  backgroundColor: unlocked ? "#1e293b" : "#0f172a",
+                  backgroundColor: unlocked ? theme.surface : 'transparent',
                   border: borderStyle,
                   boxShadow,
                   opacity: unlocked ? 1 : 0.5,
@@ -138,7 +157,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
                   <div
                     className="rounded-full font-bold flex items-center justify-center"
                     style={{
-                      backgroundColor: unlocked ? meta.color : "#475569",
+                      backgroundColor: unlocked ? meta.color : theme.textMuted,
                       color: "#0f172a",
                       fontSize: "12px",
                       minWidth: "28px",
@@ -159,7 +178,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
                   className="font-bold leading-none"
                   style={{
                     fontSize: "clamp(28px, 7vw, 44px)",
-                    color: unlocked ? meta.color : "#475569",
+                    color: unlocked ? meta.color : theme.textMuted,
                   }}
                 >
                   {meta.icon}
@@ -170,7 +189,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
                   className="font-bold text-center leading-tight"
                   style={{
                     fontSize: "clamp(13px, 3vw, 17px)",
-                    color: unlocked ? "#f1f5f9" : "#475569",
+                    color: unlocked ? theme.text : theme.textMuted,
                   }}
                 >
                   {meta.label}
@@ -179,11 +198,11 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
                 {/* Progress bar */}
                 {unlocked && (
                   <div className="w-full">
-                    <ProgressBar value={done} max={meta.total} color={meta.color} />
+                    <ProgressBar value={done} max={meta.total} color={meta.color} trackBg={progressTrackBg} />
                     <div
                       style={{
                         fontSize: "11px",
-                        color: "#94a3b8",
+                        color: theme.textMuted,
                         textAlign: "right",
                         marginTop: "4px",
                       }}
@@ -201,7 +220,7 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
         {Array.from({ length: MAX_LEVEL }, (_, i) => i + 1).every(isLevelComplete) && (
           <div
             className="flex flex-col items-center gap-3 mt-8"
-            style={{ fontSize: "clamp(14px, 3vw, 18px)", color: "#f59e0b" }}
+            style={{ fontSize: "clamp(14px, 3vw, 18px)", color: theme.accent }}
           >
             <div style={{ fontSize: "48px" }}>🏆</div>
             <div className="font-bold">All levels complete!</div>

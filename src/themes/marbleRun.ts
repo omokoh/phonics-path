@@ -1,0 +1,26 @@
+import type { Theme } from './types';
+
+export const marbleRun: Theme = {
+  id: 'marbleRun',
+  name: 'Marble Run',
+  emoji: '🔮',
+  previewGradient: 'linear-gradient(135deg, #2d1b00 0%, #6b3e1a 50%, #e07b00 100%)',
+  bg: '#2d1b00',
+  headerButtonBg: '#3d2200',
+  surface: 'rgba(255,240,210,0.97)',
+  surfaceShadow: 'rgba(139,94,60,0.55)',
+  accent: '#e07b00',
+  accentShadow: 'rgba(224,123,0,0.5)',
+  accentText: '#fff8ee',
+  text: '#1a0800',
+  textMuted: '#8B6B4A',
+  correctColor: '#22c55e',
+  relistenBg: '#3d2200',
+  relistenBorder: '#6b3e1a',
+  relistenText: '#fde68a',
+  optionRadius: '50%',
+  cardRadius: '50%',
+  wrongAnim: 'marble-wobble',
+  correctAnim: 'marble-roll',
+  bgEffect: 'none',
+};

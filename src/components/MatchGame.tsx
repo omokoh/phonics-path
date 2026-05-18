@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Phoneme } from "../data/phonemes";
 import { useAudio } from "../hooks/useAudio";
+import { useTheme } from "../hooks/useTheme";
 
 interface Props {
   phoneme: Phoneme;
@@ -24,6 +25,7 @@ function shuffle(phoneme: Phoneme): string[] {
 
 export function MatchGame({ phoneme, streak, onCorrect }: Props) {
   const { playPhoneme, playSuccess, stop } = useAudio();
+  const { theme } = useTheme();
 
   const [phase, setPhase]       = useState<Phase>("listening");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,6 +37,9 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
 
   const hasWronged = useRef(false);
   const locked     = useRef(false);
+
+  const isCircularOption = theme.optionRadius === '50%';
+  const optionSize = 'clamp(100px, 22vw, 148px)';
 
   // On new phoneme: reset, play audio, then reveal options after 500 ms gap
   useEffect(() => {
@@ -93,8 +98,13 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
     }
   };
 
-  const getBg = (choice: string) => (choice === correctId ? "#10b981" : "#fefce8");
-  const getColor = (choice: string) => (choice === correctId ? "#fff" : "#0f172a");
+  const getBg = (choice: string) => (choice === correctId ? theme.correctColor : theme.surface);
+  const getColor = (choice: string) => (choice === correctId ? "#fff" : theme.text);
+
+  const getOptionAnim = (choice: string) => {
+    if (choice === correctId) return theme.correctAnim;
+    return "";
+  };
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 w-full max-w-lg mx-auto px-4">
@@ -108,9 +118,9 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
         style={{
           width: "140px",
           height: "140px",
-          backgroundColor: "#f59e0b",
+          backgroundColor: theme.accent,
           fontSize: "62px",
-          boxShadow: "0 8px 28px rgba(245,158,11,0.45)",
+          boxShadow: `0 8px 28px ${theme.accentShadow}`,
           flexShrink: 0,
           cursor: isPlaying || phase !== "ready" ? "default" : "pointer",
         }}
@@ -122,7 +132,7 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
       <div
         style={{
           fontSize: "clamp(13px, 2.5vw, 16px)",
-          color: isPlaying ? "#f59e0b" : "#64748b",
+          color: isPlaying ? theme.accent : theme.textMuted,
           marginTop: "-4px",
           minHeight: "20px",
           transition: "color 0.3s",
@@ -137,7 +147,7 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
         <div
           style={{
             fontSize: "clamp(18px, 4vw, 24px)",
-            color: "#475569",
+            color: theme.textMuted,
             textAlign: "center",
             padding: "20px 0",
           }}
@@ -151,8 +161,8 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
         <div
           className="flex flex-col items-center gap-3 rounded-3xl px-8 py-6"
           style={{
-            backgroundColor: "#1e293b",
-            border: "2px solid #334155",
+            backgroundColor: theme.relistenBg,
+            border: `2px solid ${theme.relistenBorder}`,
             minWidth: "260px",
           }}
         >
@@ -160,7 +170,7 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
           <div
             style={{
               fontSize: "clamp(18px, 4vw, 22px)",
-              color: "#cbd5e1",
+              color: theme.relistenText,
               textAlign: "center",
             }}
           >
@@ -176,19 +186,19 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
             <button
               key={`${revealKey}-${choice}`}
               onClick={() => handleChoice(choice)}
-              className={`flex items-center justify-center rounded-2xl font-bold select-none slide-up ${
-                choice === correctId ? "correct-flash" : ""
-              }`}
+              className={`flex items-center justify-center font-bold select-none slide-up ${getOptionAnim(choice)}`}
               style={{
-                minWidth: "100px",
-                minHeight: "100px",
-                width: "clamp(100px, 22vw, 148px)",
-                height: "clamp(100px, 22vw, 148px)",
+                width: optionSize,
+                height: isCircularOption ? optionSize : undefined,
+                minWidth: isCircularOption ? undefined : '100px',
+                minHeight: isCircularOption ? undefined : '100px',
+                aspectRatio: isCircularOption ? '1' : undefined,
                 fontSize: "clamp(32px, 8vw, 52px)",
                 backgroundColor: getBg(choice),
                 color: getColor(choice),
                 border: "4px solid transparent",
-                boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+                borderRadius: theme.optionRadius,
+                boxShadow: `0 6px 20px ${theme.surfaceShadow}`,
                 animationDelay: `${i * 110}ms`,
                 transition: "background-color 0.2s",
               }}

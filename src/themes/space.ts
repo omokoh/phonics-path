@@ -1,0 +1,26 @@
+import type { Theme } from './types';
+
+export const space: Theme = {
+  id: 'space',
+  name: 'Space',
+  emoji: '🚀',
+  previewGradient: 'linear-gradient(135deg, #050520 0%, #1e1b4b 50%, #7c3aed 100%)',
+  bg: '#050520',
+  headerButtonBg: '#0f0f3a',
+  surface: '#1e1b4b',
+  surfaceShadow: 'rgba(124,58,237,0.5)',
+  accent: '#7c3aed',
+  accentShadow: 'rgba(124,58,237,0.5)',
+  accentText: '#f5f3ff',
+  text: '#e0e7ff',
+  textMuted: '#a5b4fc',
+  correctColor: '#22c55e',
+  relistenBg: '#0f0f3a',
+  relistenBorder: '#312e81',
+  relistenText: '#c7d2fe',
+  optionRadius: '50%',
+  cardRadius: '50%',
+  wrongAnim: 'asteroid-bounce',
+  correctAnim: 'rocket-launch',
+  bgEffect: 'stars',
+};

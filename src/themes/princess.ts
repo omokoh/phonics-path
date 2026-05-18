@@ -1,0 +1,26 @@
+import type { Theme } from './types';
+
+export const princess: Theme = {
+  id: 'princess',
+  name: 'Princess',
+  emoji: '👑',
+  previewGradient: 'linear-gradient(135deg, #f3e8ff 0%, #fdf4ff 50%, #e879a0 100%)',
+  bg: '#fdf4ff',
+  headerButtonBg: '#f3e8ff',
+  surface: '#ffffff',
+  surfaceShadow: 'rgba(232,121,160,0.3)',
+  accent: '#e879a0',
+  accentShadow: 'rgba(232,121,160,0.5)',
+  accentText: '#ffffff',
+  text: '#4a044e',
+  textMuted: '#a855f7',
+  correctColor: '#16a34a',
+  relistenBg: '#fae8ff',
+  relistenBorder: '#e9d5ff',
+  relistenText: '#4a044e',
+  optionRadius: '24px',
+  cardRadius: '28px',
+  wrongAnim: 'gem-shimmer',
+  correctAnim: 'jewel-float',
+  bgEffect: 'sparkles',
+};

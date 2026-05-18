@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { Phoneme } from "../data/phonemes";
 import { useAudio } from "../hooks/useAudio";
+import { useTheme } from "../hooks/useTheme";
 
 interface Props {
   phoneme: Phoneme;
@@ -9,7 +10,11 @@ interface Props {
 
 export function PhonicsCard({ phoneme, onNext }: Props) {
   const { playPhoneme, stop } = useAudio();
+  const { theme } = useTheme();
   const hasPlayed = useRef(false);
+
+  const isCircular = theme.cardRadius === '50%';
+  const circularSize = 'clamp(240px, 55vw, 300px)';
 
   useEffect(() => {
     hasPlayed.current = false;
@@ -31,11 +36,26 @@ export function PhonicsCard({ phoneme, onNext }: Props) {
       {/* Main phoneme card — tap to replay */}
       <button
         onClick={handleReplay}
-        className="phonics-card w-full rounded-3xl flex flex-col items-center justify-center gap-6 py-12 px-8 select-none active:scale-95 transition-transform duration-150"
+        className="phonics-card flex flex-col items-center justify-center gap-6 select-none active:scale-95 transition-transform duration-150"
         style={{
-          backgroundColor: "#fefce8",
-          minHeight: "320px",
-          boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
+          backgroundColor: theme.surface,
+          boxShadow: `0 12px 40px ${theme.surfaceShadow}`,
+          borderRadius: theme.cardRadius,
+          ...(isCircular
+            ? {
+                width: circularSize,
+                height: circularSize,
+                padding: '0',
+              }
+            : {
+                width: '100%',
+                minHeight: '320px',
+                borderRadius: theme.cardRadius,
+                paddingTop: '48px',
+                paddingBottom: '48px',
+                paddingLeft: '32px',
+                paddingRight: '32px',
+              }),
         }}
         aria-label={`Tap to hear the sound ${phoneme.display}`}
       >
@@ -45,15 +65,15 @@ export function PhonicsCard({ phoneme, onNext }: Props) {
         {/* Large phoneme letter(s) */}
         <div
           className="font-bold leading-none text-center"
-          style={{ fontSize: "clamp(96px, 20vw, 160px)", color: "#0f172a" }}
+          style={{ fontSize: "clamp(96px, 20vw, 160px)", color: theme.text }}
         >
           {phoneme.display}
         </div>
 
         {/* Example word */}
         <div
-          className="text-center opacity-70"
-          style={{ fontSize: "clamp(24px, 5vw, 36px)", color: "#0f172a" }}
+          className="text-center"
+          style={{ fontSize: "clamp(24px, 5vw, 36px)", color: theme.textMuted }}
         >
           {phoneme.example}
         </div>
@@ -64,13 +84,13 @@ export function PhonicsCard({ phoneme, onNext }: Props) {
         onClick={onNext}
         className="flex items-center justify-center gap-3 rounded-2xl px-12 select-none active:scale-95 transition-transform duration-150"
         style={{
-          backgroundColor: "#f59e0b",
+          backgroundColor: theme.accent,
           minHeight: "88px",
           minWidth: "200px",
           fontSize: "clamp(18px, 4vw, 26px)",
-          color: "#0f172a",
+          color: theme.accentText,
           fontWeight: "bold",
-          boxShadow: "0 6px 20px rgba(245,158,11,0.4)",
+          boxShadow: `0 6px 20px ${theme.accentShadow}`,
         }}
         aria-label="Play the matching game"
       >

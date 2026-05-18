@@ -1,0 +1,26 @@
+import type { Theme } from './types';
+
+export const raceCar: Theme = {
+  id: 'raceCar',
+  name: 'Race Car',
+  emoji: '🏎️',
+  previewGradient: 'linear-gradient(135deg, #111111 0%, #374151 50%, #dc2626 100%)',
+  bg: '#111111',
+  headerButtonBg: '#2d2d2d',
+  surface: '#f0f0f0',
+  surfaceShadow: 'rgba(220,38,38,0.35)',
+  accent: '#dc2626',
+  accentShadow: 'rgba(220,38,38,0.5)',
+  accentText: '#ffffff',
+  text: '#0f172a',
+  textMuted: '#6b7280',
+  correctColor: '#22c55e',
+  relistenBg: '#1f2937',
+  relistenBorder: '#374151',
+  relistenText: '#f9fafb',
+  optionRadius: '12px',
+  cardRadius: '20px',
+  wrongAnim: 'car-spinout',
+  correctAnim: 'car-zoom',
+  bgEffect: 'none',
+};

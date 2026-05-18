@@ -1,3 +1,7 @@
+import { ThemeBg } from './ThemeBg';
+import { ThemePicker } from './ThemePicker';
+import { useTheme } from '../hooks/useTheme';
+
 function GridIcon() {
   return (
     <svg width="30" height="30" viewBox="0 0 30 30" fill="currentColor" aria-hidden>
@@ -15,37 +19,46 @@ interface Props {
 }
 
 export function HomeScreen({ onPlay, onChooseLevel }: Props) {
+  const { theme, setThemeId } = useTheme();
+
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center gap-10 px-6"
-      style={{ backgroundColor: "#0f172a" }}
+      style={{ backgroundColor: theme.bg, position: 'relative' }}
     >
+      <ThemeBg bgEffect={theme.bgEffect} />
+
       {/* Logo */}
-      <div className="flex flex-col items-center gap-2 select-none">
+      <div className="flex flex-col items-center gap-2 select-none" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontSize: "clamp(56px, 14vw, 96px)" }}>🔤</div>
         <div
           className="font-bold tracking-wide"
-          style={{ fontSize: "clamp(28px, 7vw, 52px)", color: "#f59e0b" }}
+          style={{ fontSize: "clamp(28px, 7vw, 52px)", color: theme.accent }}
         >
           PhonicsPath
         </div>
       </div>
 
+      {/* Theme picker */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <ThemePicker currentThemeId={theme.id} onSelect={setThemeId} />
+      </div>
+
       {/* Two big navigation buttons */}
-      <div className="flex gap-6 flex-wrap justify-center w-full max-w-xl">
-        {/* Play — primary, full amber */}
+      <div className="flex gap-6 flex-wrap justify-center w-full max-w-xl" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Play — primary, full accent */}
         <button
           onClick={onPlay}
           className="flex flex-col items-center justify-center gap-3 rounded-3xl select-none active:scale-95 transition-transform duration-150 flex-1"
           style={{
-            backgroundColor: "#f59e0b",
+            backgroundColor: theme.accent,
             minHeight: "180px",
             minWidth: "140px",
             maxWidth: "240px",
             fontSize: "clamp(20px, 5vw, 28px)",
-            color: "#0f172a",
+            color: theme.accentText,
             fontWeight: "bold",
-            boxShadow: "0 10px 40px rgba(245,158,11,0.55)",
+            boxShadow: `0 10px 40px ${theme.accentShadow}`,
           }}
           aria-label="Play — continue from where you left off"
         >
@@ -53,18 +66,18 @@ export function HomeScreen({ onPlay, onChooseLevel }: Props) {
           <span>Play</span>
         </button>
 
-        {/* Levels — navy with amber border */}
+        {/* Levels — secondary with accent border */}
         <button
           onClick={onChooseLevel}
           className="flex flex-col items-center justify-center gap-3 rounded-3xl select-none active:scale-95 transition-transform duration-150 flex-1"
           style={{
-            backgroundColor: "#1e293b",
-            border: "3px solid #f59e0b",
+            backgroundColor: theme.headerButtonBg,
+            border: `3px solid ${theme.accent}`,
             minHeight: "180px",
             minWidth: "140px",
             maxWidth: "240px",
             fontSize: "clamp(20px, 5vw, 28px)",
-            color: "#f59e0b",
+            color: theme.accent,
             fontWeight: "bold",
             boxShadow: "0 10px 40px rgba(0,0,0,0.4)",
           }}

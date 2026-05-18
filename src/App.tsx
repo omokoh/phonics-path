@@ -7,8 +7,10 @@ import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
+import { ThemeBg } from "./components/ThemeBg";
 import { LEVEL_META, levelPosKey, readLevelPos, saveLevelPos } from "./data/levelData";
 import { MAX_LEVEL, phonemes, type Phoneme } from "./data/phonemes";
+import { useTheme } from "./hooks/useTheme";
 
 const SESSION_SIZE   = 5;
 const LEVEL_KEY      = "phonics_level";
@@ -37,6 +39,8 @@ function effectivePos(level: number): number {
 }
 
 export default function App() {
+  const { theme } = useTheme();
+
   const [currentLevel, setCurrentLevel] = useState(() => {
     const n = readInt(LEVEL_KEY, 1);
     return Math.min(Math.max(n, 1), MAX_LEVEL) as 1 | 2 | 3 | 4 | 5 | 6;
@@ -258,21 +262,23 @@ export default function App() {
   return (
     <div
       className="min-h-screen w-full flex flex-col"
-      style={{ backgroundColor: "#0f172a", touchAction: "manipulation" }}
+      style={{ backgroundColor: theme.bg, touchAction: "manipulation", position: "relative" }}
     >
-      <header className="flex items-center justify-between px-6 pt-6 pb-2">
+      <ThemeBg bgEffect={theme.bgEffect} />
+
+      <header className="flex items-center justify-between px-6 pt-6 pb-2" style={{ position: "relative", zIndex: 1 }}>
         <div className="flex items-center gap-3">
           <button
             onClick={handleGoHome}
             className="flex items-center justify-center rounded-xl select-none active:scale-95 transition-transform"
-            style={{ width: "40px", height: "40px", backgroundColor: "#1e293b", fontSize: "18px" }}
+            style={{ width: "40px", height: "40px", backgroundColor: theme.headerButtonBg, fontSize: "18px" }}
             aria-label="Go to home screen"
           >
             🏠
           </button>
           <div
             className="font-bold tracking-wide"
-            style={{ fontSize: "clamp(16px, 3.5vw, 24px)", color: "#f59e0b" }}
+            style={{ fontSize: "clamp(16px, 3.5vw, 24px)", color: theme.accent }}
           >
             PhonicsPath
           </div>
@@ -295,7 +301,7 @@ export default function App() {
         <ProgressDots total={sessionSize} completed={completed} />
       </header>
 
-      <main className="flex-1 flex items-center justify-center py-6">
+      <main className="flex-1 flex items-center justify-center py-6" style={{ position: "relative", zIndex: 1 }}>
         {mode === "card" && currentPhoneme && (
           <PhonicsCard phoneme={currentPhoneme} onNext={handleCardNext} />
         )}
