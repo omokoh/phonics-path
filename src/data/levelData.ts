@@ -1,5 +1,5 @@
 export interface LevelMeta {
-  level: 1 | 2 | 3 | 4 | 5 | 6;
+  level: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   icon: string;
   label: string;
   color: string;
@@ -13,6 +13,7 @@ export const LEVEL_META: LevelMeta[] = [
   { level: 4, icon: "BL", label: "Blends",        color: "#a855f7", total: 12 },
   { level: 5, icon: "SH", label: "Digraphs",      color: "#ec4899", total: 8  },
   { level: 6, icon: "AI", label: "Vowel Teams",   color: "#ef4444", total: 6  },
+  { level: 7, icon: "🎵", label: "Rhyming",       color: "#0d9488", total: 25 },
 ];
 
 // Per-level position key

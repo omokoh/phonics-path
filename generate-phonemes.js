@@ -165,21 +165,61 @@ const successPhrases = [
   { file: "success_10.mp3", text: "Great work! You're amazing!" },
 ];
 
+// ── Level 7 rhyme words ───────────────────────────────────────────────────────
+// All unique words used in src/data/rhymes.ts (targets, rhymes, and distractors).
+// Spoken clearly at child-friendly pitch for /audio/rhymes/{word}.mp3.
+const RHYME_WORDS = [
+  "bag","ball","bed","bee","big","bite","bone","book","bug","cake",
+  "can","cap","cat","chip","chop","clap","cone","cook","cup","day",
+  "deep","dog","fan","flag","flat","frog","hat","hill","hop","kite",
+  "log","make","map","moon","mud","mug","net","nose","pen","pig",
+  "play","rain","red","ring","rose","run","ship","shop","sing","sit",
+  "sleep","sun","tall","top","train","tree","tune","wet",
+];
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   const phonemesDir = join(__dirname, "public/audio/phonemes");
   const successDir  = join(__dirname, "public/audio/success");
+  const rhymesDir   = join(__dirname, "public/audio/rhymes");
 
   await mkdir(phonemesDir, { recursive: true });
   await mkdir(successDir,  { recursive: true });
+  await mkdir(rhymesDir,   { recursive: true });
 
-  // --only=bl,cl,fl   regenerates a specific subset
+  const isRhymes  = process.argv.includes("--rhymes");
+
+  // --only=bl,cl,fl   regenerates a specific subset of phonemes
   const onlyArg = process.argv.find((a) => a.startsWith("--only="));
   const onlySet = onlyArg ? new Set(onlyArg.replace("--only=", "").split(",")) : null;
   const ids     = onlySet ? ALL_IDS.filter((id) => onlySet.has(id)) : ALL_IDS;
 
   const isPartial = !!onlySet;
   let ok = 0, fail = 0;
+
+  if (isRhymes) {
+    // ── Pass 3: Level 7 rhyme word audio ───────────────────────────────────
+    console.log(`\nGenerating ${RHYME_WORDS.length} rhyme word audio files…\n`);
+    console.log("── Pass 3: rhyme words ──");
+    for (const word of RHYME_WORDS) {
+      process.stdout.write(`  ${word.padEnd(10)}  → `);
+      try {
+        const buf = await callTTS({ text: word }, 0.85, 2.0);
+        await writeFile(join(rhymesDir, `${word}.mp3`), buf);
+        console.log("✓");
+        ok++;
+      } catch (err) {
+        console.log(`✗  ${err.message}`);
+        fail++;
+      }
+      await delay(200);
+    }
+    console.log(`\n──────────────────────────────`);
+    console.log(`  ${ok} generated, ${fail} failed`);
+    if (fail) console.log("  Re-run to retry failed files.");
+    console.log(`  public/audio/rhymes/\n`);
+    return;
+  }
 
   console.log(isPartial
     ? `\nRegenerating ${ids.length} phoneme(s): ${ids.join(", ")}\n`

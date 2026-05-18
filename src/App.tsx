@@ -7,14 +7,18 @@ import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
+import { RhymeGame } from "./components/RhymeGame";
 import { ThemeBg } from "./components/ThemeBg";
 import { LEVEL_META, levelPosKey, readLevelPos, saveLevelPos } from "./data/levelData";
 import { MAX_LEVEL, phonemes, type Phoneme } from "./data/phonemes";
+import { rhymes, type RhymeSet } from "./data/rhymes";
 import { useTheme } from "./hooks/useTheme";
 
 const SESSION_SIZE   = 5;
 const LEVEL_KEY      = "phonics_level";
 const LEVEL_POS_KEY  = "phonics_level_pos";
+
+type Level = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 type Mode =
   | "home" | "level_select"
@@ -38,12 +42,14 @@ function effectivePos(level: number): number {
   return raw;
 }
 
+const LEVEL_COLORS = ["#f59e0b","#10b981","#3b82f6","#a855f7","#ec4899","#ef4444","#0d9488"];
+
 export default function App() {
   const { theme } = useTheme();
 
-  const [currentLevel, setCurrentLevel] = useState(() => {
+  const [currentLevel, setCurrentLevel] = useState<Level>(() => {
     const n = readInt(LEVEL_KEY, 1);
-    return Math.min(Math.max(n, 1), MAX_LEVEL) as 1 | 2 | 3 | 4 | 5 | 6;
+    return Math.min(Math.max(n, 1), MAX_LEVEL) as Level;
   });
   const [levelPos, setLevelPos]         = useState(() => effectivePos(currentLevel));
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -57,19 +63,31 @@ export default function App() {
   const [reviewPhonemes, setReviewPhonemes] = useState<Phoneme[] | null>(null);
   const [isReview, setIsReview]             = useState(false);
 
+  const isRhymeLevel = currentLevel === 7;
+
+  // L1–6 phoneme data
   const levelPhonemes = useMemo(
-    () => phonemes.filter((p) => p.level === currentLevel),
+    () => phonemes.filter((p) => p.level === (currentLevel as 1 | 2 | 3 | 4 | 5 | 6)),
     [currentLevel]
   );
-
   const sessionPhonemes = useMemo(
     () => levelPhonemes.slice(levelPos, levelPos + SESSION_SIZE),
     [levelPhonemes, levelPos]
   );
+  const activePhonemes  = reviewPhonemes ?? sessionPhonemes;
+  const sessionSize     = activePhonemes.length;
+  const currentPhoneme  = activePhonemes[currentIndex];
 
-  const activePhonemes = reviewPhonemes ?? sessionPhonemes;
-  const sessionSize    = activePhonemes.length;
-  const currentPhoneme = activePhonemes[currentIndex];
+  // L7 rhyme data
+  const sessionRhymes = useMemo(
+    () => rhymes.slice(levelPos, levelPos + SESSION_SIZE),
+    [levelPos]
+  );
+  const currentRhyme: RhymeSet | undefined = isRhymeLevel ? sessionRhymes[currentIndex] : undefined;
+
+  // Displayed session size and completed count for ProgressDots
+  const displaySize      = isRhymeLevel ? sessionRhymes.length : sessionSize;
+  const displayCompleted = completed;
 
   useEffect(() => {
     const block = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
@@ -77,13 +95,14 @@ export default function App() {
     return () => document.removeEventListener("touchstart", block);
   }, []);
 
-  // Safety net: if card/game mode ends up with no phoneme to show,
-  // route to grand_complete (level 6) or level_complete (levels 1–5).
+  // Safety net: if card/game mode has nothing to show, route to completion screens.
   useEffect(() => {
-    if ((mode === "card" || mode === "game") && !isReview && sessionPhonemes.length === 0) {
+    if (isRhymeLevel) {
+      if (mode === "card" && sessionRhymes.length === 0) setMode("grand_complete");
+    } else if ((mode === "card" || mode === "game") && !isReview && sessionPhonemes.length === 0) {
       setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
     }
-  }, [mode, isReview, sessionPhonemes.length, currentLevel]);
+  }, [mode, isReview, sessionPhonemes.length, sessionRhymes.length, currentLevel, isRhymeLevel]);
 
   // ── Navigation handlers ──────────────────────────────────────────────
 
@@ -92,7 +111,7 @@ export default function App() {
   const handleGoHome       = useCallback(() => setMode("home"), []);
   const handleCardNext     = useCallback(() => setMode("game"), []);
 
-  const handleSelectLevel  = useCallback((level: 1 | 2 | 3 | 4 | 5 | 6) => {
+  const handleSelectLevel = useCallback((level: Level) => {
     const pos = effectivePos(level);
     setCurrentLevel(level);
     setLevelPos(pos);
@@ -107,6 +126,7 @@ export default function App() {
     setMode("card");
   }, []);
 
+  // Handler for L1–6 phoneme match game
   const handleCorrect = useCallback((emoji: string, neededReview: boolean) => {
     setSuccessEmoji(emoji);
     setStreak((s) => s + 1);
@@ -170,6 +190,34 @@ export default function App() {
     currentPhoneme, sessionSize, levelPos, levelPhonemes.length, currentLevel,
   ]);
 
+  // Handler for L7 rhyme game (no review round)
+  const handleRhymeCorrect = useCallback((emoji: string, _neededReview: boolean) => {
+    setSuccessEmoji(emoji);
+    setStreak((s) => s + 1);
+
+    const newCompleted = completed + 1;
+    setCompleted(newCompleted);
+
+    if (newCompleted < sessionRhymes.length) {
+      setCurrentIndex((i) => i + 1);
+      setMode("card");
+      return;
+    }
+
+    // Session complete — advance position
+    const newPos = levelPos + sessionRhymes.length;
+    setLevelPos(newPos);
+    saveLevelPos(7, newPos);
+    save(LEVEL_POS_KEY, newPos);
+
+    if (newPos >= rhymes.length) {
+      setMode("grand_complete");
+      return;
+    }
+
+    setMode("session_complete");
+  }, [completed, sessionRhymes.length, levelPos]);
+
   const handleSessionNext = useCallback(() => {
     setCurrentIndex(0);
     setCompleted(0);
@@ -180,9 +228,7 @@ export default function App() {
   }, []);
 
   const handleLevelNext = useCallback(() => {
-    const next = currentLevel >= MAX_LEVEL
-      ? 1
-      : ((currentLevel + 1) as 1 | 2 | 3 | 4 | 5 | 6);
+    const next = (currentLevel >= MAX_LEVEL ? 1 : currentLevel + 1) as Level;
     const pos = effectivePos(next);
     setCurrentLevel(next);
     setLevelPos(pos);
@@ -257,7 +303,7 @@ export default function App() {
     );
   }
 
-  const levelColor = ["#f59e0b","#10b981","#3b82f6","#a855f7","#ec4899","#ef4444"][currentLevel - 1];
+  const levelColor = LEVEL_COLORS[currentLevel - 1] ?? "#0d9488";
 
   return (
     <div
@@ -298,11 +344,18 @@ export default function App() {
           </div>
         </div>
 
-        <ProgressDots total={sessionSize} completed={completed} />
+        <ProgressDots total={displaySize} completed={displayCompleted} />
       </header>
 
       <main className="flex-1 flex items-center justify-center py-6" style={{ position: "relative", zIndex: 1 }}>
-        {mode === "card" && currentPhoneme && (
+        {mode === "card" && isRhymeLevel && currentRhyme && (
+          <RhymeGame
+            rhyme={currentRhyme}
+            streak={streak}
+            onCorrect={handleRhymeCorrect}
+          />
+        )}
+        {mode === "card" && !isRhymeLevel && currentPhoneme && (
           <PhonicsCard phoneme={currentPhoneme} onNext={handleCardNext} />
         )}
         {mode === "game" && currentPhoneme && (

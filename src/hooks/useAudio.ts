@@ -102,7 +102,43 @@ export function useAudio() {
     });
   }, []);
 
+  // Plays any audio URL, falls back to TTS on failure.
+  const playUrl = useCallback((url: string, fallbackText: string): Promise<void> => {
+    clearAll();
+    return new Promise((resolve) => {
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      const safetyTimer = setTimeout(resolve, 5000);
+      audio.onended = () => { clearTimeout(safetyTimer); resolve(); };
+      audio.play().catch(() => {
+        clearTimeout(safetyTimer);
+        if (!("speechSynthesis" in window)) { resolve(); return; }
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(fallbackText);
+        u.rate = 0.82; u.pitch = 1.1; u.volume = 1;
+        const t2 = setTimeout(resolve, 5000);
+        u.onend = () => { clearTimeout(t2); resolve(); };
+        u.onerror = () => { clearTimeout(t2); resolve(); };
+        window.speechSynthesis.speak(u);
+      });
+    });
+  }, [clearAll]);
+
+  // Speaks arbitrary text via TTS (used for rhyme prompts).
+  const speakText = useCallback((text: string): Promise<void> => {
+    clearAll();
+    return new Promise((resolve) => {
+      if (!("speechSynthesis" in window)) { resolve(); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.82; u.pitch = 1.1; u.volume = 1;
+      const safetyTimer = setTimeout(resolve, 5000);
+      u.onend  = () => { clearTimeout(safetyTimer); resolve(); };
+      u.onerror = () => { clearTimeout(safetyTimer); resolve(); };
+      window.speechSynthesis.speak(u);
+    });
+  }, [clearAll]);
+
   const stop = useCallback(() => clearAll(), [clearAll]);
 
-  return { playPhoneme, playSuccess, stop };
+  return { playPhoneme, playUrl, speakText, playSuccess, stop };
 }
