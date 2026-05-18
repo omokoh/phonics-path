@@ -222,3 +222,42 @@ button {
   100% { transform: scale(1.1)  translateY(-9px);  filter: brightness(1.15); }
 }
 .jewel-float { animation: jewelFloat 0.52s ease-out both; }
+
+/* ═══ Level-complete fly-by heroes (one-shot, play once) ═══════════════ */
+
+/* Marble Run — marble rolls left→right with spin */
+@keyframes marbleSlide {
+  0%   { transform: translateX(-60vw) rotate(0deg);   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(60vw)  rotate(720deg); opacity: 0; }
+}
+.lvl-marble-slide { animation: marbleSlide 2.2s ease-in-out 0.3s both; }
+
+/* Race Car — car zooms left→right */
+@keyframes carRace {
+  0%   { transform: translateX(-60vw); opacity: 0; }
+  8%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(60vw);  opacity: 0; }
+}
+.lvl-car-race { animation: carRace 1.8s ease-in 0.2s both; }
+
+/* Space — rocket launches upward */
+@keyframes rocketUp {
+  0%   { transform: translateY(0)     scale(0.7); opacity: 0; }
+  15%  { transform: translateY(-20px) scale(1.1); opacity: 1; }
+  85%  { transform: translateY(-45vh) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-60vh) scale(0.7); opacity: 0; }
+}
+.lvl-rocket-up { animation: rocketUp 2.4s ease-out 0.4s both; }
+
+/* Princess — crown drops from top and settles */
+@keyframes crownDrop {
+  0%   { transform: translateY(-160px) rotate(-15deg); opacity: 0; }
+  40%  { transform: translateY(20px)   rotate(8deg);   opacity: 1; }
+  60%  { transform: translateY(-12px)  rotate(-4deg);  opacity: 1; }
+  80%  { transform: translateY(6px)    rotate(2deg);   opacity: 1; }
+  100% { transform: translateY(0)      rotate(0deg);   opacity: 1; }
+}
+.lvl-crown-drop { animation: crownDrop 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both; }

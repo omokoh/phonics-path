@@ -23,4 +23,12 @@ export const space: Theme = {
   wrongAnim: 'asteroid-bounce',
   correctAnim: 'rocket-launch',
   bgEffect: 'stars',
+  celebration: {
+    levelHero:    '🚀',
+    centerEmoji:  '⭐',
+    grandHero:    '🏆',
+    particleColors: ['#ffffff', '#e0e7ff', '#c7d2fe', '#fbbf24', '#a78bfa', '#ffffff'],
+    particleShape: 'circle',
+    levelHeroAnim: 'lvl-rocket-up',
+  },
 };

@@ -23,4 +23,12 @@ export const raceCar: Theme = {
   wrongAnim: 'car-spinout',
   correctAnim: 'car-zoom',
   bgEffect: 'none',
+  celebration: {
+    levelHero:    '🏎️',
+    centerEmoji:  '🏁',
+    grandHero:    '🏆',
+    particleColors: ['#ffffff', '#111111', '#dc2626', '#ffffff', '#374151', '#dc2626'],
+    particleShape: 'square',
+    levelHeroAnim: 'lvl-car-race',
+  },
 };

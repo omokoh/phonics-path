@@ -23,4 +23,12 @@ export const marbleRun: Theme = {
   wrongAnim: 'marble-wobble',
   correctAnim: 'marble-roll',
   bgEffect: 'none',
+  celebration: {
+    levelHero:    '🔮',
+    centerEmoji:  '🌟',
+    grandHero:    '🏆',
+    particleColors: ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#f97316', '#a855f7'],
+    particleShape: 'circle',
+    levelHeroAnim: 'lvl-marble-slide',
+  },
 };

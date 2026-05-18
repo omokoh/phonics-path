@@ -30,4 +30,14 @@ export interface Theme {
 
   // Background particle effect type
   bgEffect: 'none' | 'stars' | 'sparkles';
+
+  // Celebration animations for level complete + grand screens
+  celebration: {
+    levelHero: string;        // emoji that animates across the screen
+    centerEmoji: string;      // emoji that bounces in the center card
+    grandHero: string;        // central emoji for grand celebration
+    particleColors: string[]; // colors for the falling particle rain
+    particleShape: 'circle' | 'square';
+    levelHeroAnim: string;    // CSS class for the fly-by animation
+  };
 }

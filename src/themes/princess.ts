@@ -23,4 +23,12 @@ export const princess: Theme = {
   wrongAnim: 'gem-shimmer',
   correctAnim: 'jewel-float',
   bgEffect: 'sparkles',
+  celebration: {
+    levelHero:    '👑',
+    centerEmoji:  '✨',
+    grandHero:    '👑',
+    particleColors: ['#f0abfc', '#e879a0', '#c084fc', '#fbcfe8', '#fce7f3', '#e879a0'],
+    particleShape: 'circle',
+    levelHeroAnim: 'lvl-crown-drop',
+  },
 };
