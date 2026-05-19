@@ -169,7 +169,7 @@ const successPhrases = [
 // Individual phoneme sounds come from existing public/audio/phonemes/ files.
 // Only the prompt needs to be generated.
 // Stored at public/audio/prompts/blending-prompt.mp3
-const BLENDING_PROMPT = "What word do those sounds make?";
+const BLENDING_PROMPT = "What sound do these make together?";
 
 // ── Level 7 rhyme words ───────────────────────────────────────────────────────
 // All unique words used in src/data/rhymes.ts (targets, rhymes, and distractors).

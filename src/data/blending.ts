@@ -2,228 +2,162 @@ export interface BlendSet {
   id: string;
   sounds: string[];
   word: string;
-  emoji: string;
   audioFiles: string[];   // individual phoneme MP3s from public/audio/phonemes/
-  distractors: { word: string; emoji: string }[];
+  distractors: string[];  // text-only; 2 wrong choices
   group: 1 | 2 | 3 | 4;
 }
 
 export const blendings: BlendSet[] = [
-  // ── Group 1: 2-sound words ─────────────────────────────────────────────────
+  // ── Group 1: vowel + consonant (VC) ───────────────────────────────────────
   {
-    id: "in", sounds: ["i","n"], word: "in", emoji: "📥",
-    audioFiles: ["i.mp3","n.mp3"],
-    distractors: [{ word: "dog", emoji: "🐶" }, { word: "cup", emoji: "🥤" }],
-    group: 1,
-  },
-  {
-    id: "up", sounds: ["u","p"], word: "up", emoji: "⬆️",
-    audioFiles: ["u.mp3","p.mp3"],
-    distractors: [{ word: "cat", emoji: "🐱" }, { word: "hat", emoji: "🎩" }],
-    group: 1,
-  },
-  {
-    id: "at", sounds: ["a","t"], word: "at", emoji: "🎯",
-    audioFiles: ["a.mp3","t.mp3"],
-    distractors: [{ word: "sun", emoji: "☀️" }, { word: "big", emoji: "🐘" }],
-    group: 1,
-  },
-  {
-    id: "it", sounds: ["i","t"], word: "it", emoji: "✨",
-    audioFiles: ["i.mp3","t.mp3"],
-    distractors: [{ word: "fan", emoji: "🌀" }, { word: "mug", emoji: "☕" }],
-    group: 1,
-  },
-  {
-    id: "on", sounds: ["o","n"], word: "on", emoji: "💡",
+    id: "on", sounds: ["o","n"], word: "on",
     audioFiles: ["o.mp3","n.mp3"],
-    distractors: [{ word: "bus", emoji: "🚌" }, { word: "red", emoji: "🍎" }],
-    group: 1,
+    distractors: ["up","at"], group: 1,
+  },
+  {
+    id: "up", sounds: ["u","p"], word: "up",
+    audioFiles: ["u.mp3","p.mp3"],
+    distractors: ["in","at"], group: 1,
+  },
+  {
+    id: "at", sounds: ["a","t"], word: "at",
+    audioFiles: ["a.mp3","t.mp3"],
+    distractors: ["on","it"], group: 1,
+  },
+  {
+    id: "in", sounds: ["i","n"], word: "in",
+    audioFiles: ["i.mp3","n.mp3"],
+    distractors: ["up","am"], group: 1,
+  },
+  {
+    id: "it", sounds: ["i","t"], word: "it",
+    audioFiles: ["i.mp3","t.mp3"],
+    distractors: ["at","if"], group: 1,
+  },
+  {
+    id: "am", sounds: ["a","m"], word: "am",
+    audioFiles: ["a.mp3","m.mp3"],
+    distractors: ["in","on"], group: 1,
+  },
+  {
+    id: "if", sounds: ["i","f"], word: "if",
+    audioFiles: ["i.mp3","f.mp3"],
+    distractors: ["it","up"], group: 1,
   },
 
-  // ── Group 2: 3-sound CVC words ─────────────────────────────────────────────
+  // ── Group 2: consonant + vowel (CV) ───────────────────────────────────────
   {
-    id: "cat", sounds: ["c","a","t"], word: "cat", emoji: "🐱",
+    id: "so", sounds: ["s","o"], word: "so",
+    audioFiles: ["s.mp3","o.mp3"],
+    distractors: ["no","go"], group: 2,
+  },
+  {
+    id: "no", sounds: ["n","o"], word: "no",
+    audioFiles: ["n.mp3","o.mp3"],
+    distractors: ["so","me"], group: 2,
+  },
+  {
+    id: "go", sounds: ["g","o"], word: "go",
+    audioFiles: ["g.mp3","o.mp3"],
+    distractors: ["no","we"], group: 2,
+  },
+  {
+    id: "me", sounds: ["m","e"], word: "me",
+    audioFiles: ["m.mp3","e.mp3"],
+    distractors: ["he","be"], group: 2,
+  },
+  {
+    id: "he", sounds: ["h","e"], word: "he",
+    audioFiles: ["h.mp3","e.mp3"],
+    distractors: ["me","we"], group: 2,
+  },
+  {
+    id: "we", sounds: ["w","e"], word: "we",
+    audioFiles: ["w.mp3","e.mp3"],
+    distractors: ["he","be"], group: 2,
+  },
+  {
+    id: "be", sounds: ["b","e"], word: "be",
+    audioFiles: ["b.mp3","e.mp3"],
+    distractors: ["me","so"], group: 2,
+  },
+
+  // ── Group 3: consonant + vowel + consonant (CVC) ──────────────────────────
+  {
+    id: "cat", sounds: ["c","a","t"], word: "cat",
     audioFiles: ["c.mp3","a.mp3","t.mp3"],
-    distractors: [{ word: "dog", emoji: "🐶" }, { word: "sun", emoji: "☀️" }],
-    group: 2,
+    distractors: ["dog","hat"], group: 3,
   },
   {
-    id: "dog", sounds: ["d","o","g"], word: "dog", emoji: "🐶",
+    id: "dog", sounds: ["d","o","g"], word: "dog",
     audioFiles: ["d.mp3","o.mp3","g.mp3"],
-    distractors: [{ word: "cat", emoji: "🐱" }, { word: "hat", emoji: "🎩" }],
-    group: 2,
+    distractors: ["cat","big"], group: 3,
   },
   {
-    id: "sun", sounds: ["s","u","n"], word: "sun", emoji: "☀️",
+    id: "sun", sounds: ["s","u","n"], word: "sun",
     audioFiles: ["s.mp3","u.mp3","n.mp3"],
-    distractors: [{ word: "mug", emoji: "☕" }, { word: "pin", emoji: "📌" }],
-    group: 2,
+    distractors: ["mug","bus"], group: 3,
   },
   {
-    id: "hat", sounds: ["h","a","t"], word: "hat", emoji: "🎩",
+    id: "hat", sounds: ["h","a","t"], word: "hat",
     audioFiles: ["h.mp3","a.mp3","t.mp3"],
-    distractors: [{ word: "dog", emoji: "🐶" }, { word: "big", emoji: "🐘" }],
-    group: 2,
+    distractors: ["cat","fan"], group: 3,
   },
   {
-    id: "big", sounds: ["b","i","g"], word: "big", emoji: "🐘",
+    id: "big", sounds: ["b","i","g"], word: "big",
     audioFiles: ["b.mp3","i.mp3","g.mp3"],
-    distractors: [{ word: "hat", emoji: "🎩" }, { word: "cup", emoji: "🥤" }],
-    group: 2,
+    distractors: ["pin","red"], group: 3,
   },
   {
-    id: "red", sounds: ["r","e","d"], word: "red", emoji: "🍎",
+    id: "red", sounds: ["r","e","d"], word: "red",
     audioFiles: ["r.mp3","e.mp3","d.mp3"],
-    distractors: [{ word: "bus", emoji: "🚌" }, { word: "fan", emoji: "🌀" }],
-    group: 2,
+    distractors: ["fan","bus"], group: 3,
   },
   {
-    id: "mug", sounds: ["m","u","g"], word: "mug", emoji: "☕",
+    id: "mug", sounds: ["m","u","g"], word: "mug",
     audioFiles: ["m.mp3","u.mp3","g.mp3"],
-    distractors: [{ word: "sun", emoji: "☀️" }, { word: "pin", emoji: "📌" }],
-    group: 2,
+    distractors: ["sun","pin"], group: 3,
   },
   {
-    id: "pin", sounds: ["p","i","n"], word: "pin", emoji: "📌",
+    id: "pin", sounds: ["p","i","n"], word: "pin",
     audioFiles: ["p.mp3","i.mp3","n.mp3"],
-    distractors: [{ word: "bus", emoji: "🚌" }, { word: "cup", emoji: "🥤" }],
-    group: 2,
+    distractors: ["big","mug"], group: 3,
   },
   {
-    id: "bus", sounds: ["b","u","s"], word: "bus", emoji: "🚌",
+    id: "bus", sounds: ["b","u","s"], word: "bus",
     audioFiles: ["b.mp3","u.mp3","s.mp3"],
-    distractors: [{ word: "fan", emoji: "🌀" }, { word: "jet", emoji: "✈️" }],
-    group: 2,
+    distractors: ["mug","fan"], group: 3,
   },
   {
-    id: "fan", sounds: ["f","a","n"], word: "fan", emoji: "🌀",
+    id: "fan", sounds: ["f","a","n"], word: "fan",
     audioFiles: ["f.mp3","a.mp3","n.mp3"],
-    distractors: [{ word: "bus", emoji: "🚌" }, { word: "mug", emoji: "☕" }],
-    group: 2,
-  },
-  {
-    id: "wet", sounds: ["w","e","t"], word: "wet", emoji: "💧",
-    audioFiles: ["w.mp3","e.mp3","t.mp3"],
-    distractors: [{ word: "jet", emoji: "✈️" }, { word: "nap", emoji: "😴" }],
-    group: 2,
-  },
-  {
-    id: "jet", sounds: ["j","e","t"], word: "jet", emoji: "✈️",
-    audioFiles: ["j.mp3","e.mp3","t.mp3"],
-    distractors: [{ word: "wet", emoji: "💧" }, { word: "hop", emoji: "🐰" }],
-    group: 2,
-  },
-  {
-    id: "hop", sounds: ["h","o","p"], word: "hop", emoji: "🐰",
-    audioFiles: ["h.mp3","o.mp3","p.mp3"],
-    distractors: [{ word: "nap", emoji: "😴" }, { word: "cup", emoji: "🥤" }],
-    group: 2,
-  },
-  {
-    id: "nap", sounds: ["n","a","p"], word: "nap", emoji: "😴",
-    audioFiles: ["n.mp3","a.mp3","p.mp3"],
-    distractors: [{ word: "hop", emoji: "🐰" }, { word: "cat", emoji: "🐱" }],
-    group: 2,
-  },
-  {
-    id: "cup", sounds: ["c","u","p"], word: "cup", emoji: "🥤",
-    audioFiles: ["c.mp3","u.mp3","p.mp3"],
-    distractors: [{ word: "pin", emoji: "📌" }, { word: "nap", emoji: "😴" }],
-    group: 2,
+    distractors: ["hat","bus"], group: 3,
   },
 
-  // ── Group 3: 3-sound words with digraphs ───────────────────────────────────
+  // ── Group 4: digraph + vowel + consonant ──────────────────────────────────
   {
-    id: "ship", sounds: ["sh","i","p"], word: "ship", emoji: "⛵",
+    id: "ship", sounds: ["sh","i","p"], word: "ship",
     audioFiles: ["sh.mp3","i.mp3","p.mp3"],
-    distractors: [{ word: "chip", emoji: "🍟" }, { word: "ring", emoji: "💍" }],
-    group: 3,
+    distractors: ["chip","whip"], group: 4,
   },
   {
-    id: "chip", sounds: ["ch","i","p"], word: "chip", emoji: "🍟",
+    id: "chip", sounds: ["ch","i","p"], word: "chip",
     audioFiles: ["ch.mp3","i.mp3","p.mp3"],
-    distractors: [{ word: "ship", emoji: "⛵" }, { word: "ring", emoji: "💍" }],
-    group: 3,
+    distractors: ["ship","thin"], group: 4,
   },
   {
-    id: "thin", sounds: ["th","i","n"], word: "thin", emoji: "📏",
+    id: "thin", sounds: ["th","i","n"], word: "thin",
     audioFiles: ["th_soft.mp3","i.mp3","n.mp3"],
-    distractors: [{ word: "ship", emoji: "⛵" }, { word: "whip", emoji: "🪢" }],
-    group: 3,
+    distractors: ["ring","whip"], group: 4,
   },
   {
-    id: "whip", sounds: ["wh","i","p"], word: "whip", emoji: "🪢",
-    audioFiles: ["wh.mp3","i.mp3","p.mp3"],
-    distractors: [{ word: "ship", emoji: "⛵" }, { word: "chip", emoji: "🍟" }],
-    group: 3,
-  },
-  {
-    id: "ring", sounds: ["r","i","ng"], word: "ring", emoji: "💍",
+    id: "ring", sounds: ["r","i","ng"], word: "ring",
     audioFiles: ["r.mp3","i.mp3","ng.mp3"],
-    distractors: [{ word: "ship", emoji: "⛵" }, { word: "chip", emoji: "🍟" }],
-    group: 3,
-  },
-
-  // ── Group 4: words with consonant blends ───────────────────────────────────
-  {
-    id: "flag", sounds: ["fl","a","g"], word: "flag", emoji: "🚩",
-    audioFiles: ["fl.mp3","a.mp3","g.mp3"],
-    distractors: [{ word: "frog", emoji: "🐸" }, { word: "clap", emoji: "👏" }],
-    group: 4,
+    distractors: ["thin","ship"], group: 4,
   },
   {
-    id: "stop", sounds: ["s","t","o","p"], word: "stop", emoji: "🛑",
-    audioFiles: ["s.mp3","t.mp3","o.mp3","p.mp3"],
-    distractors: [{ word: "flag", emoji: "🚩" }, { word: "drum", emoji: "🥁" }],
-    group: 4,
-  },
-  {
-    id: "frog", sounds: ["fr","o","g"], word: "frog", emoji: "🐸",
-    audioFiles: ["fr.mp3","o.mp3","g.mp3"],
-    distractors: [{ word: "flag", emoji: "🚩" }, { word: "grab", emoji: "🤚" }],
-    group: 4,
-  },
-  {
-    id: "clap", sounds: ["cl","a","p"], word: "clap", emoji: "👏",
-    audioFiles: ["cl.mp3","a.mp3","p.mp3"],
-    distractors: [{ word: "flag", emoji: "🚩" }, { word: "drum", emoji: "🥁" }],
-    group: 4,
-  },
-  {
-    id: "drum", sounds: ["dr","u","m"], word: "drum", emoji: "🥁",
-    audioFiles: ["dr.mp3","u.mp3","m.mp3"],
-    distractors: [{ word: "clap", emoji: "👏" }, { word: "crab", emoji: "🦀" }],
-    group: 4,
-  },
-  {
-    id: "slip", sounds: ["sl","i","p"], word: "slip", emoji: "🧊",
-    audioFiles: ["sl.mp3","i.mp3","p.mp3"],
-    distractors: [{ word: "trip", emoji: "🧳" }, { word: "clap", emoji: "👏" }],
-    group: 4,
-  },
-  {
-    id: "trip", sounds: ["tr","i","p"], word: "trip", emoji: "🧳",
-    audioFiles: ["tr.mp3","i.mp3","p.mp3"],
-    distractors: [{ word: "slip", emoji: "🧊" }, { word: "brag", emoji: "🏆" }],
-    group: 4,
-  },
-  {
-    id: "grab", sounds: ["gr","a","b"], word: "grab", emoji: "🤚",
-    audioFiles: ["gr.mp3","a.mp3","b.mp3"],
-    distractors: [{ word: "crab", emoji: "🦀" }, { word: "brag", emoji: "🏆" }],
-    group: 4,
-  },
-  {
-    id: "brag", sounds: ["br","a","g"], word: "brag", emoji: "🏆",
-    audioFiles: ["br.mp3","a.mp3","g.mp3"],
-    distractors: [{ word: "grab", emoji: "🤚" }, { word: "crab", emoji: "🦀" }],
-    group: 4,
-  },
-  {
-    id: "crab", sounds: ["cr","a","b"], word: "crab", emoji: "🦀",
-    audioFiles: ["cr.mp3","a.mp3","b.mp3"],
-    distractors: [{ word: "brag", emoji: "🏆" }, { word: "drum", emoji: "🥁" }],
-    group: 4,
+    id: "whip", sounds: ["wh","i","p"], word: "whip",
+    audioFiles: ["wh.mp3","i.mp3","p.mp3"],
+    distractors: ["ship","chip"], group: 4,
   },
 ];
