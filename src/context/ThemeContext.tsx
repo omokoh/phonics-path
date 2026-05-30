@@ -1,14 +1,8 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { DEFAULT_THEME_ID, themes, type Theme, type ThemeId } from '../themes';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { DEFAULT_THEME_ID, themes, type ThemeId } from '../themes';
+import { ThemeContext } from './themeContextValue';
 
 const STORAGE_KEY = 'phonicspath-theme';
-
-interface Ctx {
-  theme: Theme;
-  setThemeId: (id: ThemeId) => void;
-}
-
-const ThemeContext = createContext<Ctx | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeId, setThemeIdState] = useState<ThemeId>(() => {
@@ -28,10 +22,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme(): Ctx {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used inside ThemeProvider');
-  return ctx;
 }

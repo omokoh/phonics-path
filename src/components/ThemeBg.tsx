@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 
 interface Props {
   bgEffect: 'none' | 'stars' | 'sparkles';
@@ -21,24 +21,30 @@ function randomBetween(min: number, max: number) {
 }
 
 export function ThemeBg({ bgEffect }: Props) {
-  const starsRef = useRef<Particle[] | null>(null);
-  const sparklesRef = useRef<Particle[] | null>(null);
+  const [stars] = useState<Particle[]>(() =>
+    Array.from({ length: 50 }, () => ({
+      x: randomBetween(0, 100),
+      y: randomBetween(0, 100),
+      size: randomBetween(4, 8),
+      color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+      delay: randomBetween(0, 3),
+      duration: randomBetween(2, 4),
+    }))
+  );
+  const [sparkles] = useState<Particle[]>(() =>
+    Array.from({ length: 24 }, () => ({
+      x: randomBetween(0, 100),
+      y: randomBetween(20, 100),
+      size: randomBetween(6, 14),
+      color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
+      delay: randomBetween(0, 5),
+      duration: randomBetween(3, 6),
+    }))
+  );
 
   if (bgEffect === 'none') return null;
 
   if (bgEffect === 'stars') {
-    if (!starsRef.current) {
-      starsRef.current = Array.from({ length: 50 }, () => ({
-        x: randomBetween(0, 100),
-        y: randomBetween(0, 100),
-        size: randomBetween(4, 8),
-        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
-        delay: randomBetween(0, 3),
-        duration: randomBetween(2, 4),
-      }));
-    }
-    const stars = starsRef.current;
-
     return (
       <div
         style={{
@@ -72,18 +78,6 @@ export function ThemeBg({ bgEffect }: Props) {
   }
 
   if (bgEffect === 'sparkles') {
-    if (!sparklesRef.current) {
-      sparklesRef.current = Array.from({ length: 24 }, () => ({
-        x: randomBetween(0, 100),
-        y: randomBetween(20, 100),
-        size: randomBetween(6, 14),
-        color: SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)],
-        delay: randomBetween(0, 5),
-        duration: randomBetween(3, 6),
-      }));
-    }
-    const sparkles = sparklesRef.current;
-
     return (
       <div
         style={{

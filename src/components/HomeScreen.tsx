@@ -16,9 +16,10 @@ function GridIcon() {
 interface Props {
   onPlay: () => void;
   onChooseLevel: () => void;
+  onReadingPath: () => void;
 }
 
-export function HomeScreen({ onPlay, onChooseLevel }: Props) {
+export function HomeScreen({ onPlay, onChooseLevel, onReadingPath }: Props) {
   const { theme, setThemeId } = useTheme();
 
   return (
@@ -44,8 +45,8 @@ export function HomeScreen({ onPlay, onChooseLevel }: Props) {
         <ThemePicker currentThemeId={theme.id} onSelect={setThemeId} />
       </div>
 
-      {/* Two big navigation buttons */}
-      <div className="flex gap-6 flex-wrap justify-center w-full max-w-xl" style={{ position: 'relative', zIndex: 1 }}>
+      {/* Big navigation buttons */}
+      <div className="flex gap-5 flex-wrap justify-center w-full max-w-3xl" style={{ position: 'relative', zIndex: 1 }}>
         {/* Play — primary, full accent */}
         <button
           onClick={onPlay}
@@ -64,6 +65,25 @@ export function HomeScreen({ onPlay, onChooseLevel }: Props) {
         >
           <span style={{ fontSize: "clamp(44px, 11vw, 72px)" }}>⭐</span>
           <span>Play</span>
+        </button>
+
+        <button
+          onClick={onReadingPath}
+          className="flex flex-col items-center justify-center gap-3 rounded-3xl select-none active:scale-95 transition-transform duration-150 flex-1"
+          style={{
+            backgroundColor: theme.surface,
+            minHeight: "180px",
+            minWidth: "140px",
+            maxWidth: "240px",
+            fontSize: "clamp(20px, 5vw, 28px)",
+            color: theme.text,
+            fontWeight: "bold",
+            boxShadow: `0 10px 34px ${theme.surfaceShadow}`,
+          }}
+          aria-label="Open the decodable reading path"
+        >
+          <span style={{ fontSize: "clamp(44px, 11vw, 72px)" }}>📚</span>
+          <span>Read</span>
         </button>
 
         {/* Levels — secondary with accent border */}

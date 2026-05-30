@@ -7,6 +7,7 @@ import { LevelSelectScreen } from "./components/LevelSelectScreen";
 import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
+import { ReadingPathScreen } from "./components/ReadingPathScreen";
 import { BlendingGame } from "./components/BlendingGame";
 import { RhymeGame } from "./components/RhymeGame";
 import { ThemeBg } from "./components/ThemeBg";
@@ -24,6 +25,7 @@ type Level = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 type Mode =
   | "home" | "level_select"
+  | "reading_path"
   | "card" | "game"
   | "session_complete" | "level_complete" | "grand_complete";
 
@@ -107,23 +109,19 @@ export default function App() {
     return () => document.removeEventListener("touchstart", block);
   }, []);
 
-  // Safety net: nothing to show → route to correct completion screen.
-  useEffect(() => {
-    if (isRhymeLevel) {
-      if (mode === "card" && sessionRhymes.length === 0)
-        setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
-    } else if (isBlendingLevel) {
-      if (mode === "card" && sessionBlendings.length === 0)
-        setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
-    } else if ((mode === "card" || mode === "game") && !isReview && sessionPhonemes.length === 0) {
-      setMode(currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete");
-    }
-  }, [mode, isReview, sessionPhonemes.length, sessionRhymes.length, sessionBlendings.length, currentLevel, isRhymeLevel, isBlendingLevel]);
+  const completionMode: Mode = currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete";
+  const activeMode: Mode =
+    (isRhymeLevel && mode === "card" && sessionRhymes.length === 0) ||
+    (isBlendingLevel && mode === "card" && sessionBlendings.length === 0) ||
+    (!isRhymeLevel && !isBlendingLevel && (mode === "card" || mode === "game") && !isReview && sessionPhonemes.length === 0)
+      ? completionMode
+      : mode;
 
   // ── Navigation handlers ──────────────────────────────────────────────
 
   const handlePlay         = useCallback(() => setMode("card"), []);
   const handleChooseLevel  = useCallback(() => setMode("level_select"), []);
+  const handleReadingPath  = useCallback(() => setMode("reading_path"), []);
   const handleGoHome       = useCallback(() => setMode("home"), []);
   const handleCardNext     = useCallback(() => setMode("game"), []);
 
@@ -204,47 +202,47 @@ export default function App() {
   ]);
 
   // Shared handler for L7 (rhyme) and L8 (blending) — no review round
-  function makeSpecialHandler(
-    sessionLen: () => number,
-    totalLen: () => number,
-    levelNum: number
-  ) {
-    return (emoji: string, _neededReview: boolean) => {
-      setSuccessEmoji(emoji);
-      setStreak((s) => s + 1);
+  const handleRhymeCorrect = useCallback((emoji: string) => {
+    setSuccessEmoji(emoji);
+    setStreak((s) => s + 1);
 
-      const newCompleted = completed + 1;
-      setCompleted(newCompleted);
+    const newCompleted = completed + 1;
+    setCompleted(newCompleted);
 
-      if (newCompleted < sessionLen()) {
-        setCurrentIndex((i) => i + 1);
-        setMode("card");
-        return;
-      }
+    if (newCompleted < sessionRhymes.length) {
+      setCurrentIndex((i) => i + 1);
+      setMode("card");
+      return;
+    }
 
-      const newPos = levelPos + sessionLen();
-      setLevelPos(newPos);
-      saveLevelPos(levelNum, newPos);
-      save(LEVEL_POS_KEY, newPos);
+    const newPos = levelPos + sessionRhymes.length;
+    setLevelPos(newPos);
+    saveLevelPos(7, newPos);
+    save(LEVEL_POS_KEY, newPos);
 
-      setMode(newPos >= totalLen()
-        ? (currentLevel >= MAX_LEVEL ? "grand_complete" : "level_complete")
-        : "session_complete"
-      );
-    };
-  }
+    setMode(newPos >= rhymes.length ? completionMode : "session_complete");
+  }, [completed, completionMode, levelPos, sessionRhymes.length]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleRhymeCorrect = useCallback(
-    makeSpecialHandler(() => sessionRhymes.length, () => rhymes.length, 7),
-    [completed, sessionRhymes.length, levelPos, currentLevel]
-  );
+  const handleBlendingCorrect = useCallback((emoji: string) => {
+    setSuccessEmoji(emoji);
+    setStreak((s) => s + 1);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleBlendingCorrect = useCallback(
-    makeSpecialHandler(() => sessionBlendings.length, () => blendings.length, 8),
-    [completed, sessionBlendings.length, levelPos, currentLevel]
-  );
+    const newCompleted = completed + 1;
+    setCompleted(newCompleted);
+
+    if (newCompleted < sessionBlendings.length) {
+      setCurrentIndex((i) => i + 1);
+      setMode("card");
+      return;
+    }
+
+    const newPos = levelPos + sessionBlendings.length;
+    setLevelPos(newPos);
+    saveLevelPos(8, newPos);
+    save(LEVEL_POS_KEY, newPos);
+
+    setMode(newPos >= blendings.length ? completionMode : "session_complete");
+  }, [completed, completionMode, levelPos, sessionBlendings.length]);
 
   const handleSessionNext = useCallback(() => {
     setCurrentIndex(0);
@@ -294,21 +292,26 @@ export default function App() {
 
   // ── Screen routing ───────────────────────────────────────────────────
 
-  if (mode === "home") {
-    return <HomeScreen onPlay={handlePlay} onChooseLevel={handleChooseLevel} />;
+  if (activeMode === "home") {
+    return <HomeScreen onPlay={handlePlay} onChooseLevel={handleChooseLevel} onReadingPath={handleReadingPath} />;
   }
 
-  if (mode === "level_select") {
+  if (activeMode === "level_select") {
     return (
       <LevelSelectScreen
         currentLevel={currentLevel}
         onSelect={handleSelectLevel}
         onBack={handleGoHome}
+        onReadingPath={handleReadingPath}
       />
     );
   }
 
-  if (mode === "grand_complete") {
+  if (activeMode === "reading_path") {
+    return <ReadingPathScreen onBack={handleGoHome} />;
+  }
+
+  if (activeMode === "grand_complete") {
     return (
       <GrandCelebrationScreen
         onReset={handleGrandReset}
@@ -317,11 +320,11 @@ export default function App() {
     );
   }
 
-  if (mode === "level_complete") {
+  if (activeMode === "level_complete") {
     return <LevelCompleteScreen level={currentLevel} onNext={handleLevelNext} />;
   }
 
-  if (mode === "session_complete") {
+  if (activeMode === "session_complete") {
     return (
       <CompletionScreen
         onPlayAgain={handleSessionNext}
@@ -376,17 +379,17 @@ export default function App() {
       </header>
 
       <main className="flex-1 flex items-center justify-center py-6" style={{ position: "relative", zIndex: 1 }}>
-        {mode === "card" && isRhymeLevel && currentRhyme && (
-          <RhymeGame rhyme={currentRhyme} streak={streak} onCorrect={handleRhymeCorrect} />
+        {activeMode === "card" && isRhymeLevel && currentRhyme && (
+          <RhymeGame key={currentRhyme.id} rhyme={currentRhyme} streak={streak} onCorrect={handleRhymeCorrect} />
         )}
-        {mode === "card" && isBlendingLevel && currentBlending && (
-          <BlendingGame blend={currentBlending} streak={streak} onCorrect={handleBlendingCorrect} />
+        {activeMode === "card" && isBlendingLevel && currentBlending && (
+          <BlendingGame key={currentBlending.id} blend={currentBlending} streak={streak} onCorrect={handleBlendingCorrect} />
         )}
-        {mode === "card" && !isRhymeLevel && !isBlendingLevel && currentPhoneme && (
+        {activeMode === "card" && !isRhymeLevel && !isBlendingLevel && currentPhoneme && (
           <PhonicsCard phoneme={currentPhoneme} onNext={handleCardNext} />
         )}
-        {mode === "game" && currentPhoneme && (
-          <MatchGame phoneme={currentPhoneme} streak={streak} onCorrect={handleCorrect} />
+        {activeMode === "game" && currentPhoneme && (
+          <MatchGame key={currentPhoneme.id} phoneme={currentPhoneme} streak={streak} onCorrect={handleCorrect} />
         )}
       </main>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { LEVEL_META } from "../data/levelData";
 import { useAudio } from "../hooks/useAudio";
 import { useTheme } from "../hooks/useTheme";
@@ -32,7 +32,7 @@ export function GrandCelebrationScreen({ onReset, onChooseLevel }: Props) {
   const { theme } = useTheme();
   const { celebration } = theme;
   const { playSuccess } = useAudio();
-  const particles = useRef<Particle[]>(makeParticles(celebration.particleColors));
+  const [particles] = useState<Particle[]>(() => makeParticles(celebration.particleColors));
 
   const particleRadius = celebration.particleShape === 'circle' ? '50%' : '4px';
 
@@ -57,7 +57,7 @@ export function GrandCelebrationScreen({ onReset, onChooseLevel }: Props) {
       style={{ backgroundColor: theme.bg }}
     >
       {/* Heavy themed particle rain */}
-      {particles.current.map((p) => (
+      {particles.map((p) => (
         <div
           key={p.id}
           className="confetti-star"

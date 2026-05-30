@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import { MAX_LEVEL } from "../data/phonemes";
 import { useTheme } from "../hooks/useTheme";
 
@@ -41,14 +41,10 @@ const flyByPos: Record<string, React.CSSProperties> = {
 export function LevelCompleteScreen({ level, onNext }: Props) {
   const { theme } = useTheme();
   const { celebration } = theme;
-  const particles = useRef<Particle[]>(makeParticles(celebration.particleColors));
+  const [particles] = useState<Particle[]>(() => makeParticles(celebration.particleColors));
   const isLast  = level >= MAX_LEVEL;
   const color   = LEVEL_COLORS[(level - 1) % LEVEL_COLORS.length];
   const label   = LEVEL_LABELS[(level - 1) % LEVEL_LABELS.length];
-
-  useEffect(() => {
-    particles.current = makeParticles(celebration.particleColors);
-  }, [level, theme.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const particleRadius = celebration.particleShape === 'circle' ? '50%' : '4px';
 
@@ -58,7 +54,7 @@ export function LevelCompleteScreen({ level, onNext }: Props) {
       style={{ backgroundColor: theme.bg }}
     >
       {/* Theme-coloured particle rain */}
-      {particles.current.map((p) => (
+      {particles.map((p) => (
         <div
           key={p.id}
           className="confetti-star"

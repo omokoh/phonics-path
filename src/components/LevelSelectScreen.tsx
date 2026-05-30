@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { MAX_LEVEL } from "../data/phonemes";
 import {
   LEVEL_META,
@@ -15,6 +15,7 @@ interface Props {
   currentLevel: number;
   onSelect: (level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8) => void;
   onBack: () => void;
+  onReadingPath: () => void;
 }
 
 function ProgressBar({
@@ -52,12 +53,9 @@ function ProgressBar({
   );
 }
 
-export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
+export function LevelSelectScreen({ currentLevel, onSelect, onBack, onReadingPath }: Props) {
   const { theme } = useTheme();
   const [parentUnlocked, setParentUnlocked] = useState<Set<number>>(getParentUnlocked);
-  // Force re-read of localStorage values for fresh progress
-  const [, forceUpdate] = useState(0);
-  useEffect(() => { forceUpdate((n) => n + 1); }, []);
 
   // Determine if current theme is light (princess) for progress bar track
   const isLightTheme = theme.bg.startsWith('#f');
@@ -118,6 +116,52 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack }: Props) {
             margin: "0 auto",
           }}
         >
+          <button
+            onClick={onReadingPath}
+            className="flex flex-col items-center justify-between rounded-3xl select-none transition-transform duration-150 active:scale-95"
+            style={{
+              minHeight: "160px",
+              padding: "20px 16px 16px",
+              backgroundColor: theme.surface,
+              border: `3px solid ${theme.accent}`,
+              boxShadow: `0 0 0 4px ${theme.accent}33, 0 6px 24px ${theme.surfaceShadow}`,
+              gap: "10px",
+            }}
+            aria-label="Open decodable reading path"
+          >
+            <div className="w-full flex justify-between items-start" style={{ minHeight: "24px" }}>
+              <div
+                className="rounded-full font-bold flex items-center justify-center"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: theme.accentText,
+                  fontSize: "12px",
+                  minWidth: "58px",
+                  height: "28px",
+                  paddingInline: "8px",
+                }}
+              >
+                Phase 2
+              </div>
+              <div style={{ fontSize: "20px" }}>📚</div>
+            </div>
+            <div
+              className="font-bold leading-none"
+              style={{ fontSize: "clamp(28px, 7vw, 44px)", color: theme.accent }}
+            >
+              Read
+            </div>
+            <div
+              className="font-bold text-center leading-tight"
+              style={{ fontSize: "clamp(13px, 3vw, 17px)", color: theme.text }}
+            >
+              Decodable Path
+            </div>
+            <div style={{ width: "100%", color: theme.textMuted, fontSize: "11px", textAlign: "right" }}>
+              words + stories
+            </div>
+          </button>
+
           {LEVEL_META.map((meta) => {
             const done        = readLevelPos(meta.level);
             const unlocked    = isLevelUnlocked(meta.level) || parentUnlocked.has(meta.level);

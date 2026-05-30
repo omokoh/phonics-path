@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 
 interface Props {
   onPlayAgain: () => void;
@@ -34,18 +34,14 @@ function generateStars(): Star[] {
 }
 
 export function CompletionScreen({ onPlayAgain, label = "Keep Going!", emoji = "🌟" }: Props) {
-  const starsRef = useRef<Star[]>(generateStars());
-
-  useEffect(() => {
-    starsRef.current = generateStars();
-  }, []);
+  const [stars] = useState<Star[]>(generateStars);
 
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
       style={{ backgroundColor: "#0f172a" }}
     >
-      {starsRef.current.map((star) => (
+      {stars.map((star) => (
         <div
           key={star.id}
           className="confetti-star"

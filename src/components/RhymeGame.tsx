@@ -76,14 +76,6 @@ export function RhymeGame({ rhyme, streak, onCorrect }: Props) {
     let live = true;
     const alive = () => live;
 
-    hasWronged.current = false;
-    locked.current = false;
-    setPhase("listening");
-    setIsPlaying(false);
-    setCorrectWord(null);
-    setChoices(shuffleChoices(rhyme));
-    setRevealKey(0);
-
     const t = setTimeout(() => { runSequence(rhyme.targetWord, alive, false); }, 300);
 
     return () => { live = false; clearTimeout(t); stop(); };
@@ -113,11 +105,8 @@ export function RhymeGame({ rhyme, streak, onCorrect }: Props) {
 
       // Re-play sequence after a short pause to let the child register the mistake
       setTimeout(() => {
-        let live = true;
-        const alive = () => live;
+        const alive = () => true;
         runSequence(rhyme.targetWord, alive, true);
-        // alive flag is never set to false here — component unmount handled by
-        // the effect cleanup which calls stop(), resolving the pending promises
       }, 500);
     }
   };

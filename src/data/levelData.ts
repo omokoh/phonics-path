@@ -32,7 +32,8 @@ export function saveLevelPos(level: number, pos: number) {
 // Level N+1 unlocks when level N reaches 80% completion
 export const UNLOCK_THRESHOLD = 0.8;
 
-export function isLevelUnlocked(_level: number): boolean {
+export function isLevelUnlocked(level: number): boolean {
+  void level;
   return true;
 }
 

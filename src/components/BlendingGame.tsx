@@ -82,16 +82,6 @@ export function BlendingGame({ blend, streak, onCorrect }: Props) {
     let live = true;
     const alive = () => live;
 
-    hasWronged.current = false;
-    locked.current = false;
-    setPhase("listening");
-    setIsPlaying(false);
-    setLitIndex(-1);
-    setMerging(false);
-    setCorrectWord(null);
-    setChoices(shuffleChoices(blend.word, blend.distractors));
-    setRevealKey(0);
-
     const t = setTimeout(() => { runSequence(blend.sounds, blend.audioFiles, alive, false); }, 400);
 
     return () => { live = false; clearTimeout(t); stop(); };
@@ -99,8 +89,7 @@ export function BlendingGame({ blend, streak, onCorrect }: Props) {
 
   const handleReplay = () => {
     if (isPlaying || phase !== "ready") return;
-    let live = true;
-    runSequence(blend.sounds, blend.audioFiles, () => live, false);
+    runSequence(blend.sounds, blend.audioFiles, () => true, false);
   };
 
   const handleChoice = (word: string) => {
@@ -119,8 +108,7 @@ export function BlendingGame({ blend, streak, onCorrect }: Props) {
       setPhase("relisten");
       setIsPlaying(true);
       setTimeout(() => {
-        let live = true;
-        runSequence(blend.sounds, blend.audioFiles, () => live, true);
+        runSequence(blend.sounds, blend.audioFiles, () => true, true);
       }, 500);
     }
   };

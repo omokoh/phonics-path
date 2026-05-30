@@ -29,7 +29,7 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
 
   const [phase, setPhase]       = useState<Phase>("listening");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [choices, setChoices]   = useState<string[]>([]);
+  const [choices, setChoices]   = useState<string[]>(() => shuffle(phoneme));
   const [correctId, setCorrectId] = useState<string | null>(null);
 
   // increments each time options are (re)revealed — forces slide-up re-run
@@ -41,16 +41,9 @@ export function MatchGame({ phoneme, streak, onCorrect }: Props) {
   const isCircularOption = theme.optionRadius === '50%';
   const optionSize = 'clamp(100px, 22vw, 148px)';
 
-  // On new phoneme: reset, play audio, then reveal options after 500 ms gap
+  // On mount: play audio, then reveal options after 500 ms gap.
   useEffect(() => {
     let cancelled = false;
-    hasWronged.current = false;
-    locked.current     = false;
-    setPhase("listening");
-    setCorrectId(null);
-    setChoices(shuffle(phoneme));
-    setRevealKey(0);
-    setIsPlaying(false);
 
     const t = setTimeout(() => {
       if (cancelled) return;
