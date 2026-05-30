@@ -17,9 +17,10 @@ interface Props {
   onPlay: () => void;
   onChooseLevel: () => void;
   onReadingPath: () => void;
+  onStoryMode: () => void;
 }
 
-export function HomeScreen({ onPlay, onChooseLevel, onReadingPath }: Props) {
+export function HomeScreen({ onPlay, onChooseLevel, onReadingPath, onStoryMode }: Props) {
   const { theme, setThemeId } = useTheme();
 
   return (
@@ -46,7 +47,7 @@ export function HomeScreen({ onPlay, onChooseLevel, onReadingPath }: Props) {
       </div>
 
       {/* Big navigation buttons */}
-      <div className="flex gap-5 flex-wrap justify-center w-full max-w-3xl" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex gap-5 flex-wrap justify-center w-full max-w-4xl" style={{ position: 'relative', zIndex: 1 }}>
         {/* Play — primary, full accent */}
         <button
           onClick={onPlay}
@@ -84,6 +85,26 @@ export function HomeScreen({ onPlay, onChooseLevel, onReadingPath }: Props) {
         >
           <span style={{ fontSize: "clamp(44px, 11vw, 72px)" }}>📚</span>
           <span>Read</span>
+        </button>
+
+        <button
+          onClick={onStoryMode}
+          className="flex flex-col items-center justify-center gap-3 rounded-3xl select-none active:scale-95 transition-transform duration-150 flex-1"
+          style={{
+            backgroundColor: theme.headerButtonBg,
+            border: `3px solid ${theme.accent}`,
+            minHeight: "180px",
+            minWidth: "140px",
+            maxWidth: "240px",
+            fontSize: "clamp(20px, 5vw, 28px)",
+            color: theme.accent,
+            fontWeight: "bold",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.35)",
+          }}
+          aria-label="Open story mode"
+        >
+          <span style={{ fontSize: "clamp(44px, 11vw, 72px)" }}>📖</span>
+          <span>Story</span>
         </button>
 
         {/* Levels — secondary with accent border */}

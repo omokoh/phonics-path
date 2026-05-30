@@ -8,6 +8,7 @@ import { MatchGame } from "./components/MatchGame";
 import { PhonicsCard } from "./components/PhonicsCard";
 import { ProgressDots } from "./components/ProgressDots";
 import { ReadingPathScreen } from "./components/ReadingPathScreen";
+import { StoryModeScreen } from "./components/StoryModeScreen";
 import { BlendingGame } from "./components/BlendingGame";
 import { RhymeGame } from "./components/RhymeGame";
 import { ThemeBg } from "./components/ThemeBg";
@@ -25,7 +26,7 @@ type Level = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 type Mode =
   | "home" | "level_select"
-  | "reading_path"
+  | "reading_path" | "story_mode"
   | "card" | "game"
   | "session_complete" | "level_complete" | "grand_complete";
 
@@ -122,6 +123,7 @@ export default function App() {
   const handlePlay         = useCallback(() => setMode("card"), []);
   const handleChooseLevel  = useCallback(() => setMode("level_select"), []);
   const handleReadingPath  = useCallback(() => setMode("reading_path"), []);
+  const handleStoryMode    = useCallback(() => setMode("story_mode"), []);
   const handleGoHome       = useCallback(() => setMode("home"), []);
   const handleCardNext     = useCallback(() => setMode("game"), []);
 
@@ -293,7 +295,14 @@ export default function App() {
   // ── Screen routing ───────────────────────────────────────────────────
 
   if (activeMode === "home") {
-    return <HomeScreen onPlay={handlePlay} onChooseLevel={handleChooseLevel} onReadingPath={handleReadingPath} />;
+    return (
+      <HomeScreen
+        onPlay={handlePlay}
+        onChooseLevel={handleChooseLevel}
+        onReadingPath={handleReadingPath}
+        onStoryMode={handleStoryMode}
+      />
+    );
   }
 
   if (activeMode === "level_select") {
@@ -303,12 +312,17 @@ export default function App() {
         onSelect={handleSelectLevel}
         onBack={handleGoHome}
         onReadingPath={handleReadingPath}
+        onStoryMode={handleStoryMode}
       />
     );
   }
 
   if (activeMode === "reading_path") {
     return <ReadingPathScreen onBack={handleGoHome} />;
+  }
+
+  if (activeMode === "story_mode") {
+    return <StoryModeScreen onBack={handleGoHome} />;
   }
 
   if (activeMode === "grand_complete") {
