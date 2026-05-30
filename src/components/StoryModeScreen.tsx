@@ -12,7 +12,7 @@ import { useAudio } from "../hooks/useAudio";
 import { useTheme } from "../hooks/useTheme";
 import { ThemeBg } from "./ThemeBg";
 
-type StoryView = "shelf" | "reader" | "questions" | "insights";
+type StoryView = "shelf" | "reader" | "questions" | "insights" | "open-info";
 type StoryMode = "read-to-me" | "i-read" | "echo-read";
 
 interface Props {
@@ -68,9 +68,12 @@ export function StoryModeScreen({ onBack }: Props) {
   useEffect(() => () => stop(), [stop]);
 
   function openBook(book: StoryBook) {
-    if (book.pages.length === 0) return;
     recordBookOpened(book.id);
     setSelectedBook(book);
+    if (book.pages.length === 0) {
+      setView("open-info");
+      return;
+    }
     setPageIndex(0);
     setMode("read-to-me");
     setActivePhrase(null);
@@ -181,6 +184,7 @@ export function StoryModeScreen({ onBack }: Props) {
 
   const title =
     view === "reader" && selectedBook ? selectedBook.title :
+    view === "open-info" && selectedBook ? selectedBook.title :
     view === "questions" ? "Story Questions" :
     view === "insights" ? "Story Insights" :
     "Story Mode";
@@ -267,8 +271,10 @@ export function StoryModeScreen({ onBack }: Props) {
               </div>
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(220px, 100%), 1fr))" }}>
                 {openBookShelf.map((book) => (
-                  <div
+                  <button
                     key={book.id}
+                    onClick={() => openBook(book)}
+                    className="text-left active:scale-95 transition-transform"
                     style={{
                       backgroundColor: theme.headerButtonBg,
                       color: theme.text,
@@ -286,10 +292,61 @@ export function StoryModeScreen({ onBack }: Props) {
                       {book.license}<br />
                       {book.attribution}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
+          </div>
+        )}
+
+        {view === "open-info" && selectedBook && (
+          <div className="w-full max-w-2xl mx-auto flex flex-col gap-5" style={{ color: theme.text }}>
+            <Illustration image={selectedBook.coverImage} large />
+            <div
+              style={{
+                backgroundColor: theme.surface,
+                borderRadius: theme.cardRadius,
+                boxShadow: `0 8px 28px ${theme.surfaceShadow}`,
+                padding: "clamp(24px, 6vw, 36px)",
+              }}
+            >
+              <div className="font-bold" style={{ color: theme.accent, fontSize: "clamp(24px, 6vw, 38px)", lineHeight: 1.15 }}>
+                {selectedBook.title}
+              </div>
+              <div style={{ marginTop: "16px", color: theme.text, fontSize: "clamp(16px, 3.8vw, 22px)", lineHeight: 1.45 }}>
+                This open-book slot is ready for licensed picture-book files. No external book pages are embedded yet.
+              </div>
+              <div
+                style={{
+                  marginTop: "20px",
+                  backgroundColor: theme.headerButtonBg,
+                  borderRadius: "16px",
+                  padding: "18px",
+                  color: theme.textMuted,
+                  fontSize: "clamp(13px, 3vw, 17px)",
+                  lineHeight: 1.45,
+                }}
+              >
+                <strong style={{ color: theme.accent }}>Source:</strong> {selectedBook.source}<br />
+                <strong style={{ color: theme.accent }}>License:</strong> {selectedBook.license}<br />
+                <strong style={{ color: theme.accent }}>Attribution:</strong> {selectedBook.attribution}
+              </div>
+            </div>
+            <button
+              onClick={() => setView("shelf")}
+              className="font-bold active:scale-95 transition-transform"
+              style={{
+                minHeight: "76px",
+                minWidth: "220px",
+                alignSelf: "center",
+                borderRadius: "18px",
+                backgroundColor: theme.accent,
+                color: theme.accentText,
+                fontSize: "clamp(18px, 4vw, 26px)",
+              }}
+            >
+              Back to shelf
+            </button>
           </div>
         )}
 
