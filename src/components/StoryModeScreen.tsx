@@ -290,7 +290,8 @@ export function StoryModeScreen({ onBack }: Props) {
                     <div style={{ color: theme.textMuted, fontSize: "clamp(12px, 2.8vw, 15px)", lineHeight: 1.4 }}>
                       {book.source}<br />
                       {book.license}<br />
-                      {book.attribution}
+                      {book.attribution}<br />
+                      Tap for source details
                     </div>
                   </button>
                 ))}
@@ -331,6 +332,26 @@ export function StoryModeScreen({ onBack }: Props) {
                 <strong style={{ color: theme.accent }}>License:</strong> {selectedBook.license}<br />
                 <strong style={{ color: theme.accent }}>Attribution:</strong> {selectedBook.attribution}
               </div>
+              {selectedBook.sourceUrl && (
+                <a
+                  href={selectedBook.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-bold flex items-center justify-center active:scale-95 transition-transform"
+                  style={{
+                    marginTop: "20px",
+                    minHeight: "76px",
+                    borderRadius: "18px",
+                    backgroundColor: theme.accent,
+                    color: theme.accentText,
+                    fontSize: "clamp(18px, 4vw, 26px)",
+                    textDecoration: "none",
+                  }}
+                  aria-label={`Open source page for ${selectedBook.title}`}
+                >
+                  Open source page
+                </a>
+              )}
             </div>
             <button
               onClick={() => setView("shelf")}

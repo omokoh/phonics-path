@@ -41,6 +41,7 @@ export interface StoryBook {
   title: string;
   type: StoryBookType;
   source: string;
+  sourceUrl?: string;
   license: string;
   attribution: string;
   skillGroup: string;
@@ -270,6 +271,7 @@ export const openBookShelf: StoryBook[] = [
     title: "Book Dash candidate: Hair",
     type: "open_book",
     source: "Book Dash source files",
+    sourceUrl: "https://bookdash.org/book-source-files/",
     license: "CC BY 4.0 metadata placeholder",
     attribution: "Attribution required before assets are embedded",
     skillGroup: "Listening, vocabulary, comprehension",
@@ -284,6 +286,7 @@ export const openBookShelf: StoryBook[] = [
     title: "Book Dash candidate: Animals",
     type: "open_book",
     source: "Book Dash source files",
+    sourceUrl: "https://bookdash.org/book-source-files/",
     license: "CC BY 4.0 metadata placeholder",
     attribution: "Attribution required before assets are embedded",
     skillGroup: "Picture-book listening",
@@ -298,6 +301,7 @@ export const openBookShelf: StoryBook[] = [
     title: "Global Digital Library candidate",
     type: "open_book",
     source: "Global Digital Library",
+    sourceUrl: "https://content.digitallibrary.io/",
     license: "Check individual Creative Commons license before embedding",
     attribution: "Attribution required before assets are embedded",
     skillGroup: "Future open shelf",
@@ -310,4 +314,3 @@ export const openBookShelf: StoryBook[] = [
 ];
 
 export const storyBooks = [...originalStoryBooks, ...openBookShelf];
-
