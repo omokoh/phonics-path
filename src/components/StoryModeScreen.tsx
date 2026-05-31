@@ -12,7 +12,7 @@ import { useAudio } from "../hooks/useAudio";
 import { useTheme } from "../hooks/useTheme";
 import { ThemeBg } from "./ThemeBg";
 
-type StoryView = "shelf" | "reader" | "questions" | "insights" | "open-info";
+type StoryView = "shelf" | "reader" | "questions" | "insights";
 type StoryMode = "read-to-me" | "i-read" | "echo-read";
 
 interface Props {
@@ -40,9 +40,24 @@ function Illustration({ image, large = false }: { image: StoryImage; large?: boo
         background: `linear-gradient(135deg, ${image.background}, rgba(255,255,255,0.28))`,
         fontSize: large ? "clamp(84px, 20vw, 150px)" : "64px",
         boxShadow: "inset 0 -18px 50px rgba(0,0,0,0.12)",
+        overflow: "hidden",
       }}
     >
-      {image.emoji}
+      {image.kind === "emoji" ? (
+        image.emoji
+      ) : (
+        <img
+          src={image.src}
+          alt=""
+          draggable={false}
+          style={{
+            width: "100%",
+            height: large ? "clamp(180px, 34vh, 320px)" : "138px",
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -59,6 +74,7 @@ export function StoryModeScreen({ onBack }: Props) {
   const [echoIndex, setEchoIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answered, setAnswered] = useState<string | null>(null);
+  const [showCredits, setShowCredits] = useState(false);
   const cancelRead = useRef(false);
 
   const page = selectedBook?.pages[pageIndex];
@@ -70,16 +86,13 @@ export function StoryModeScreen({ onBack }: Props) {
   function openBook(book: StoryBook) {
     recordBookOpened(book.id);
     setSelectedBook(book);
-    if (book.pages.length === 0) {
-      setView("open-info");
-      return;
-    }
     setPageIndex(0);
     setMode("read-to-me");
     setActivePhrase(null);
     setEchoIndex(0);
     setQuestionIndex(0);
     setAnswered(null);
+    setShowCredits(false);
     setView("reader");
   }
 
@@ -88,6 +101,7 @@ export function StoryModeScreen({ onBack }: Props) {
     stop();
     setIsPlaying(false);
     setActivePhrase(null);
+    setShowCredits(false);
     if (view === "shelf") {
       onBack();
       return;
@@ -151,6 +165,7 @@ export function StoryModeScreen({ onBack }: Props) {
     setIsPlaying(false);
     setActivePhrase(null);
     setEchoIndex(0);
+    setShowCredits(false);
     setPageIndex((index) => Math.min(Math.max(index + direction, 0), selectedBook.pages.length - 1));
   }
 
@@ -184,7 +199,6 @@ export function StoryModeScreen({ onBack }: Props) {
 
   const title =
     view === "reader" && selectedBook ? selectedBook.title :
-    view === "open-info" && selectedBook ? selectedBook.title :
     view === "questions" ? "Story Questions" :
     view === "insights" ? "Story Insights" :
     "Story Mode";
@@ -290,84 +304,12 @@ export function StoryModeScreen({ onBack }: Props) {
                     <div style={{ color: theme.textMuted, fontSize: "clamp(12px, 2.8vw, 15px)", lineHeight: 1.4 }}>
                       {book.source}<br />
                       {book.license}<br />
-                      {book.attribution}<br />
-                      Tap for source details
+                      Read inside PhonicsPath
                     </div>
                   </button>
                 ))}
               </div>
             </section>
-          </div>
-        )}
-
-        {view === "open-info" && selectedBook && (
-          <div className="w-full max-w-2xl mx-auto flex flex-col gap-5" style={{ color: theme.text }}>
-            <Illustration image={selectedBook.coverImage} large />
-            <div
-              style={{
-                backgroundColor: theme.surface,
-                borderRadius: theme.cardRadius,
-                boxShadow: `0 8px 28px ${theme.surfaceShadow}`,
-                padding: "clamp(24px, 6vw, 36px)",
-              }}
-            >
-              <div className="font-bold" style={{ color: theme.accent, fontSize: "clamp(24px, 6vw, 38px)", lineHeight: 1.15 }}>
-                {selectedBook.title}
-              </div>
-              <div style={{ marginTop: "16px", color: theme.text, fontSize: "clamp(16px, 3.8vw, 22px)", lineHeight: 1.45 }}>
-                This open-book slot is ready for licensed picture-book files. No external book pages are embedded yet.
-              </div>
-              <div
-                style={{
-                  marginTop: "20px",
-                  backgroundColor: theme.headerButtonBg,
-                  borderRadius: "16px",
-                  padding: "18px",
-                  color: theme.textMuted,
-                  fontSize: "clamp(13px, 3vw, 17px)",
-                  lineHeight: 1.45,
-                }}
-              >
-                <strong style={{ color: theme.accent }}>Source:</strong> {selectedBook.source}<br />
-                <strong style={{ color: theme.accent }}>License:</strong> {selectedBook.license}<br />
-                <strong style={{ color: theme.accent }}>Attribution:</strong> {selectedBook.attribution}
-              </div>
-              {selectedBook.sourceUrl && (
-                <a
-                  href={selectedBook.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold flex items-center justify-center active:scale-95 transition-transform"
-                  style={{
-                    marginTop: "20px",
-                    minHeight: "76px",
-                    borderRadius: "18px",
-                    backgroundColor: theme.accent,
-                    color: theme.accentText,
-                    fontSize: "clamp(18px, 4vw, 26px)",
-                    textDecoration: "none",
-                  }}
-                  aria-label={`Open source page for ${selectedBook.title}`}
-                >
-                  Open source page
-                </a>
-              )}
-            </div>
-            <button
-              onClick={() => setView("shelf")}
-              className="font-bold active:scale-95 transition-transform"
-              style={{
-                minHeight: "76px",
-                minWidth: "220px",
-                alignSelf: "center",
-                borderRadius: "18px",
-                backgroundColor: theme.accent,
-                color: theme.accentText,
-                fontSize: "clamp(18px, 4vw, 26px)",
-              }}
-            >
-              Back to shelf
-            </button>
           </div>
         )}
 
@@ -545,7 +487,59 @@ export function StoryModeScreen({ onBack }: Props) {
                 >
                   {pageIndex === selectedBook.pages.length - 1 ? "Done" : "Next"}
                 </button>
+                {selectedBook.type === "open_book" && (
+                  <button
+                    onClick={() => setShowCredits((visible) => !visible)}
+                    className="font-bold active:scale-95 transition-transform"
+                    style={{
+                      minHeight: "62px",
+                      minWidth: "128px",
+                      borderRadius: "16px",
+                      backgroundColor: theme.headerButtonBg,
+                      color: theme.accent,
+                      fontSize: "clamp(15px, 3.3vw, 20px)",
+                    }}
+                  >
+                    Credits
+                  </button>
+                )}
               </div>
+
+              {showCredits && selectedBook.type === "open_book" && (
+                <div
+                  style={{
+                    backgroundColor: theme.headerButtonBg,
+                    borderRadius: "18px",
+                    padding: "18px",
+                    color: theme.text,
+                    fontSize: "clamp(13px, 3vw, 17px)",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <div className="font-bold" style={{ color: theme.accent, marginBottom: "8px" }}>
+                    Book credits
+                  </div>
+                  <div>{selectedBook.attribution}</div>
+                  <div style={{ color: theme.textMuted, marginTop: "8px" }}>{selectedBook.license}</div>
+                  {selectedBook.sourceUrl && (
+                    <a
+                      href={selectedBook.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: theme.accent,
+                        display: "inline-flex",
+                        marginTop: "10px",
+                        minHeight: "44px",
+                        alignItems: "center",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Source: {selectedBook.source}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
