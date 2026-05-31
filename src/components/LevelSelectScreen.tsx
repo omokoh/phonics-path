@@ -117,98 +117,6 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack, onReadingPat
             margin: "0 auto",
           }}
         >
-          <button
-            onClick={onReadingPath}
-            className="flex flex-col items-center justify-between rounded-3xl select-none transition-transform duration-150 active:scale-95"
-            style={{
-              minHeight: "160px",
-              padding: "20px 16px 16px",
-              backgroundColor: theme.surface,
-              border: `3px solid ${theme.accent}`,
-              boxShadow: `0 0 0 4px ${theme.accent}33, 0 6px 24px ${theme.surfaceShadow}`,
-              gap: "10px",
-            }}
-            aria-label="Open decodable reading path"
-          >
-            <div className="w-full flex justify-between items-start" style={{ minHeight: "24px" }}>
-              <div
-                className="rounded-full font-bold flex items-center justify-center"
-                style={{
-                  backgroundColor: theme.accent,
-                  color: theme.accentText,
-                  fontSize: "12px",
-                  minWidth: "58px",
-                  height: "28px",
-                  paddingInline: "8px",
-                }}
-              >
-                Phase 2
-              </div>
-              <div style={{ fontSize: "20px" }}>📚</div>
-            </div>
-            <div
-              className="font-bold leading-none"
-              style={{ fontSize: "clamp(28px, 7vw, 44px)", color: theme.accent }}
-            >
-              Read
-            </div>
-            <div
-              className="font-bold text-center leading-tight"
-              style={{ fontSize: "clamp(13px, 3vw, 17px)", color: theme.text }}
-            >
-              Decodable Path
-            </div>
-            <div style={{ width: "100%", color: theme.textMuted, fontSize: "11px", textAlign: "right" }}>
-              words + stories
-            </div>
-          </button>
-
-          <button
-            onClick={onStoryMode}
-            className="flex flex-col items-center justify-between rounded-3xl select-none transition-transform duration-150 active:scale-95"
-            style={{
-              minHeight: "160px",
-              padding: "20px 16px 16px",
-              backgroundColor: theme.headerButtonBg,
-              border: `3px solid ${theme.accent}`,
-              boxShadow: `0 0 0 4px ${theme.accent}22, 0 6px 24px ${theme.surfaceShadow}`,
-              gap: "10px",
-            }}
-            aria-label="Open story mode"
-          >
-            <div className="w-full flex justify-between items-start" style={{ minHeight: "24px" }}>
-              <div
-                className="rounded-full font-bold flex items-center justify-center"
-                style={{
-                  backgroundColor: theme.accent,
-                  color: theme.accentText,
-                  fontSize: "12px",
-                  minWidth: "58px",
-                  height: "28px",
-                  paddingInline: "8px",
-                }}
-              >
-                Phase 3
-              </div>
-              <div style={{ fontSize: "20px" }}>📖</div>
-            </div>
-            <div
-              className="font-bold leading-none"
-              style={{ fontSize: "clamp(28px, 7vw, 44px)", color: theme.accent }}
-            >
-              Story
-            </div>
-            <div
-              className="font-bold text-center leading-tight"
-              style={{ fontSize: "clamp(13px, 3vw, 17px)", color: theme.text }}
-            >
-              Books + Meaning
-            </div>
-            <div style={{ width: "100%", color: theme.textMuted, fontSize: "11px", textAlign: "right" }}>
-              fluency
-            </div>
-          </button>
-
           {LEVEL_META.map((meta) => {
             const done        = readLevelPos(meta.level);
             const unlocked    = isLevelUnlocked(meta.level) || parentUnlocked.has(meta.level);
@@ -305,6 +213,72 @@ export function LevelSelectScreen({ currentLevel, onSelect, onBack, onReadingPat
               </button>
             );
           })}
+
+          <button
+            onClick={onReadingPath}
+            className="flex flex-col items-center justify-between rounded-3xl select-none transition-transform duration-150 active:scale-95"
+            style={{
+              minHeight: "160px",
+              padding: "20px 16px 16px",
+              backgroundColor: theme.surface,
+              border: `3px solid ${theme.accent}`,
+              boxShadow: `0 0 0 4px ${theme.accent}33, 0 6px 24px ${theme.surfaceShadow}`,
+              gap: "10px",
+            }}
+            aria-label="Open decodable reading path"
+          >
+            <div className="w-full flex justify-end items-start" style={{ minHeight: "24px" }}>
+              <div style={{ fontSize: "20px" }}>📚</div>
+            </div>
+            <div
+              className="font-bold leading-none"
+              style={{ fontSize: "clamp(28px, 7vw, 44px)", color: theme.accent }}
+            >
+              Read
+            </div>
+            <div
+              className="font-bold text-center leading-tight"
+              style={{ fontSize: "clamp(13px, 3vw, 17px)", color: theme.text }}
+            >
+              Decodable Path
+            </div>
+            <div style={{ width: "100%", color: theme.textMuted, fontSize: "11px", textAlign: "right" }}>
+              words + stories
+            </div>
+          </button>
+
+          <button
+            onClick={onStoryMode}
+            className="flex flex-col items-center justify-between rounded-3xl select-none transition-transform duration-150 active:scale-95"
+            style={{
+              minHeight: "160px",
+              padding: "20px 16px 16px",
+              backgroundColor: theme.headerButtonBg,
+              border: `3px solid ${theme.accent}`,
+              boxShadow: `0 0 0 4px ${theme.accent}22, 0 6px 24px ${theme.surfaceShadow}`,
+              gap: "10px",
+            }}
+            aria-label="Open story mode"
+          >
+            <div className="w-full flex justify-end items-start" style={{ minHeight: "24px" }}>
+              <div style={{ fontSize: "20px" }}>📖</div>
+            </div>
+            <div
+              className="font-bold leading-none"
+              style={{ fontSize: "clamp(28px, 7vw, 44px)", color: theme.accent }}
+            >
+              Story
+            </div>
+            <div
+              className="font-bold text-center leading-tight"
+              style={{ fontSize: "clamp(13px, 3vw, 17px)", color: theme.text }}
+            >
+              Books + Meaning
+            </div>
+            <div style={{ width: "100%", color: theme.textMuted, fontSize: "11px", textAlign: "right" }}>
+              fluency
+            </div>
+          </button>
         </div>
 
         {/* All levels done indicator */}
